@@ -45,4 +45,14 @@ export class SatellitesService {
     Object.assign(satellite, updateSatelliteDto);
     return this.satellitesRepository.save(satellite);
   }
+
+  async remove(id: number): Promise<void> {
+    const satellite = await this.findOne(id);
+    if (!satellite) {
+      throw new NotFoundException(`Satellite with ID ${id} not found`);
+    }
+
+    satellite.isDeleted = true;
+    await this.satellitesRepository.save(satellite);
+  }
 }

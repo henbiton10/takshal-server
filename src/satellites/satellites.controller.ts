@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { SatellitesService } from './satellites.service';
 import { CreateSatelliteDto } from './dto/create-satellite.dto';
 import { UpdateSatelliteDto } from './dto/update-satellite.dto';
@@ -34,5 +34,10 @@ export class SatellitesController {
     @Body() updateSatelliteDto: UpdateSatelliteDto,
   ): Promise<Satellite> {
     return this.satellitesService.update(+id, updateSatelliteDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string): Promise<void> {
+    return this.satellitesService.remove(+id);
   }
 }

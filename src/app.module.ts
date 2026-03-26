@@ -10,6 +10,7 @@ import { StationsModule } from './stations/stations.module';
 import { NetworksModule } from './networks/networks.module';
 import { TerminalTypesModule } from './terminal-types/terminal-types.module';
 import { ConnectivityTypesModule } from './connectivity-types/connectivity-types.module';
+import { OperationOrdersModule } from './operation-orders/operation-orders.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ConnectivityTypesModule } from './connectivity-types/connectivity-types
     NetworksModule,
     TerminalTypesModule,
     ConnectivityTypesModule,
+    OperationOrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

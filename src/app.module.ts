@@ -11,6 +11,7 @@ import { NetworksModule } from './networks/networks.module';
 import { TerminalTypesModule } from './terminal-types/terminal-types.module';
 import { ConnectivityTypesModule } from './connectivity-types/connectivity-types.module';
 import { OperationOrdersModule } from './operation-orders/operation-orders.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { OperationOrdersModule } from './operation-orders/operation-orders.modul
     TerminalTypesModule,
     ConnectivityTypesModule,
     OperationOrdersModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

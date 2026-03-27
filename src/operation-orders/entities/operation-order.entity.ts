@@ -16,11 +16,17 @@ export class OperationOrder {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'date' })
-  date: string;
+  @Column({ type: 'date', name: 'start_date' })
+  startDate: string;
 
-  @Column({ type: 'time' })
-  time: string;
+  @Column({ type: 'time', name: 'start_time' })
+  startTime: string;
+
+  @Column({ type: 'date', name: 'end_date' })
+  endDate: string;
+
+  @Column({ type: 'time', name: 'end_time' })
+  endTime: string;
 
   @Column({ name: 'is_deleted', type: 'boolean', default: false })
   isDeleted: boolean;

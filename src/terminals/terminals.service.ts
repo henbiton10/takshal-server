@@ -31,8 +31,9 @@ export class TerminalsService {
   async create(createTerminalDto: CreateTerminalDto): Promise<Terminal> {
     const terminalTypeId = await this.getOrCreateTerminalType(createTerminalDto.terminalType);
     
+    const { terminalType, ...terminalData } = createTerminalDto;
     const terminal = this.terminalsRepository.create({
-      ...createTerminalDto,
+      ...terminalData,
       terminalTypeId,
     });
     return this.terminalsRepository.save(terminal);

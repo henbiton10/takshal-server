@@ -32,7 +32,7 @@ export class OperationOrdersController {
   }
 
   @Get('summary')
-  findAllSummary(): Promise<Array<{ id: number; name: string; date: string; time: string }>> {
+  findAllSummary(): Promise<Array<{ id: number; name: string; startDate: string; startTime: string; endDate: string; endTime: string }>> {
     return this.operationOrdersService.findAllSummary();
   }
 
@@ -88,6 +88,50 @@ export class OperationOrdersController {
   @Post('reorder-allocations')
   reorderAllocations(@Body() reorderDto: ReorderAllocationsDto): Promise<void> {
     return this.operationOrdersService.reorderAllocations(reorderDto.allocations);
+  }
+
+  @Post('validate-antenna-satellite')
+  validateAntennaSatellite(
+    @Body()
+    body: {
+      operationOrderId: number;
+      transmissionAntennaId: number | null;
+      transmissionSatelliteId: number | null;
+      receptionAntennaId: number | null;
+      receptionSatelliteId: number | null;
+      excludeAllocationId?: number;
+    },
+  ) {
+    return this.operationOrdersService.validateAntennaSatelliteConflicts(
+      body.operationOrderId,
+      body.transmissionAntennaId,
+      body.transmissionSatelliteId,
+      body.receptionAntennaId,
+      body.receptionSatelliteId,
+      body.excludeAllocationId,
+    );
+  }
+
+  @Post('validate-channel')
+  validateChannel(
+    @Body()
+    body: {
+      operationOrderId: number;
+      transmissionConnectivityId: number | null;
+      transmissionChannelNumber: number | null;
+      receptionConnectivityId: number | null;
+      receptionChannelNumber: number | null;
+      excludeAllocationId?: number;
+    },
+  ) {
+    return this.operationOrdersService.validateChannelConflicts(
+      body.operationOrderId,
+      body.transmissionConnectivityId,
+      body.transmissionChannelNumber,
+      body.receptionConnectivityId,
+      body.receptionChannelNumber,
+      body.excludeAllocationId,
+    );
   }
 }
 

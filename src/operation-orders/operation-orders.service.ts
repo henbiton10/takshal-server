@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { OperationOrder } from './entities/operation-order.entity';
 import { Allocation } from './entities/allocation.entity';
 import { CreateOperationOrderDto } from './dto/create-operation-order.dto';
@@ -39,9 +39,9 @@ export class OperationOrdersService {
     });
   }
 
-  async findAllSummary(): Promise<Array<{ id: number; name: string; date: string; time: string }>> {
+  async findAllSummary(): Promise<Array<{ id: number; name: string; startDate: string; startTime: string; endDate: string; endTime: string }>> {
     return this.operationOrdersRepository.find({
-      select: ['id', 'name', 'date', 'time'],
+      select: ['id', 'name', 'startDate', 'startTime', 'endDate', 'endTime'],
       where: { isDeleted: false },
       order: { createdAt: 'DESC' },
     });
@@ -347,12 +347,14 @@ export class OperationOrdersService {
       };
     }
 
+    const overlappingOrderIds = await this.getOverlappingOperationOrderIds(operationOrderId);
+
     const availableChannels = new Map<number, number[]>();
 
     for (const connectivity of connectivities) {
       const usedChannelsQuery = this.allocationsRepository
         .createQueryBuilder('allocation')
-        .where('allocation.operation_order_id = :orderId', { orderId: operationOrderId })
+        .where('allocation.operation_order_id IN (:...orderIds)', { orderIds: overlappingOrderIds })
         .andWhere('allocation.is_deleted = false')
         .andWhere(
           '(allocation.transmission_connectivity_id = :connId OR allocation.reception_connectivity_id = :connId)',
@@ -390,7 +392,6 @@ export class OperationOrdersService {
       (channels) => channels.length > 0,
     );
 
-    // Convert Map to plain object for JSON serialization
     const availableChannelsObj: Record<number, number[]> = {};
     availableChannels.forEach((channels, connId) => {
       availableChannelsObj[connId] = channels;
@@ -411,6 +412,48 @@ export class OperationOrdersService {
       availableConnectivities: connectivities,
       availableChannels: availableChannelsObj,
     };
+  }
+
+  private async getOverlappingOperationOrderIds(operationOrderId: number): Promise<number[]> {
+    const currentOrder = await this.operationOrdersRepository.findOne({
+      where: { id: operationOrderId, isDeleted: false },
+    });
+
+    if (!currentOrder) {
+      return [operationOrderId];
+    }
+
+    const allOrders = await this.operationOrdersRepository.find({
+      where: { isDeleted: false },
+    });
+
+    const currentStartDate = typeof currentOrder.startDate === 'string'
+      ? currentOrder.startDate
+      : new Date(currentOrder.startDate).toISOString().split('T')[0];
+    const currentEndDate = typeof currentOrder.endDate === 'string'
+      ? currentOrder.endDate
+      : new Date(currentOrder.endDate).toISOString().split('T')[0];
+    const currentStartTime = currentOrder.startTime.toString().substring(0, 5);
+    const currentEndTime = currentOrder.endTime.toString().substring(0, 5);
+    const currentStartDateTime = `${currentStartDate} ${currentStartTime}`;
+    const currentEndDateTime = `${currentEndDate} ${currentEndTime}`;
+
+    return allOrders
+      .filter((order) => {
+        const orderStartDate = typeof order.startDate === 'string'
+          ? order.startDate
+          : new Date(order.startDate).toISOString().split('T')[0];
+        const orderEndDate = typeof order.endDate === 'string'
+          ? order.endDate
+          : new Date(order.endDate).toISOString().split('T')[0];
+        const orderStartTime = order.startTime.toString().substring(0, 5);
+        const orderEndTime = order.endTime.toString().substring(0, 5);
+        const orderStartDateTime = `${orderStartDate} ${orderStartTime}`;
+        const orderEndDateTime = `${orderEndDate} ${orderEndTime}`;
+
+        return orderEndDateTime >= currentStartDateTime && orderStartDateTime <= currentEndDateTime;
+      })
+      .map((o) => o.id);
   }
 
   async getAntennasWithStationInfo(): Promise<
@@ -446,5 +489,273 @@ export class OperationOrdersService {
         subOrderNumber: update.subOrderNumber,
       });
     }
+  }
+
+  async validateAntennaSatelliteConflicts(
+    operationOrderId: number,
+    transmissionAntennaId: number | null,
+    transmissionSatelliteId: number | null,
+    receptionAntennaId: number | null,
+    receptionSatelliteId: number | null,
+    excludeAllocationId?: number,
+  ): Promise<{
+    hasConflicts: boolean;
+    conflicts: Array<{
+      direction: 'transmission' | 'reception';
+      antennaId: number;
+      antennaName: string;
+      conflictingSatelliteId: number;
+      conflictingSatelliteName: string;
+      requestedSatelliteId: number;
+      requestedSatelliteName: string;
+      operationOrderId: number;
+      operationOrderName: string;
+    }>;
+  }> {
+    const conflicts: Array<{
+      direction: 'transmission' | 'reception';
+      antennaId: number;
+      antennaName: string;
+      conflictingSatelliteId: number;
+      conflictingSatelliteName: string;
+      requestedSatelliteId: number;
+      requestedSatelliteName: string;
+      operationOrderId: number;
+      operationOrderName: string;
+    }> = [];
+
+    const overlappingOrderIds = await this.getOverlappingOperationOrderIds(operationOrderId);
+
+    if (overlappingOrderIds.length === 0) {
+      return { hasConflicts: false, conflicts: [] };
+    }
+
+    const allocationsInOverlappingOrders = await this.allocationsRepository.find({
+      where: {
+        operationOrderId: In(overlappingOrderIds),
+        isDeleted: false,
+      },
+      relations: [
+        'operationOrder',
+        'transmissionAntenna',
+        'transmissionAntenna.station',
+        'receptionAntenna',
+        'receptionAntenna.station',
+        'transmissionSatellite',
+        'receptionSatellite',
+      ],
+    });
+
+    const filteredAllocations = allocationsInOverlappingOrders.filter(
+      (alloc) => !excludeAllocationId || alloc.id !== excludeAllocationId,
+    );
+
+    if (transmissionAntennaId && transmissionSatelliteId) {
+      for (const alloc of filteredAllocations) {
+        if (
+          alloc.transmissionAntennaId === transmissionAntennaId &&
+          alloc.transmissionSatelliteId !== transmissionSatelliteId
+        ) {
+          const antenna = await this.antennaRepository.findOne({
+            where: { id: transmissionAntennaId },
+            relations: ['station'],
+          });
+          const requestedSatellite = await this.operationOrdersRepository.manager
+            .getRepository('Satellite')
+            .findOne({ where: { id: transmissionSatelliteId } });
+
+          conflicts.push({
+            direction: 'transmission',
+            antennaId: transmissionAntennaId,
+            antennaName: antenna
+              ? `${antenna.station?.name || ''} - ${antenna.frequencyBand.toUpperCase()} - ${antenna.size}m`
+              : `אנטנה ${transmissionAntennaId}`,
+            conflictingSatelliteId: alloc.transmissionSatelliteId,
+            conflictingSatelliteName: alloc.transmissionSatellite?.name || `לוויין ${alloc.transmissionSatelliteId}`,
+            requestedSatelliteId: transmissionSatelliteId,
+            requestedSatelliteName: (requestedSatellite as { name: string } | null)?.name || `לוויין ${transmissionSatelliteId}`,
+            operationOrderId: alloc.operationOrderId,
+            operationOrderName: alloc.operationOrder?.name || `פקודה ${alloc.operationOrderId}`,
+          });
+          break;
+        }
+
+        if (
+          alloc.receptionAntennaId === transmissionAntennaId &&
+          alloc.receptionSatelliteId !== transmissionSatelliteId
+        ) {
+          const antenna = await this.antennaRepository.findOne({
+            where: { id: transmissionAntennaId },
+            relations: ['station'],
+          });
+          const requestedSatellite = await this.operationOrdersRepository.manager
+            .getRepository('Satellite')
+            .findOne({ where: { id: transmissionSatelliteId } });
+
+          conflicts.push({
+            direction: 'transmission',
+            antennaId: transmissionAntennaId,
+            antennaName: antenna
+              ? `${antenna.station?.name || ''} - ${antenna.frequencyBand.toUpperCase()} - ${antenna.size}m`
+              : `אנטנה ${transmissionAntennaId}`,
+            conflictingSatelliteId: alloc.receptionSatelliteId,
+            conflictingSatelliteName: alloc.receptionSatellite?.name || `לוויין ${alloc.receptionSatelliteId}`,
+            requestedSatelliteId: transmissionSatelliteId,
+            requestedSatelliteName: (requestedSatellite as { name: string } | null)?.name || `לוויין ${transmissionSatelliteId}`,
+            operationOrderId: alloc.operationOrderId,
+            operationOrderName: alloc.operationOrder?.name || `פקודה ${alloc.operationOrderId}`,
+          });
+          break;
+        }
+      }
+    }
+
+    if (receptionAntennaId && receptionSatelliteId) {
+      for (const alloc of filteredAllocations) {
+        if (
+          alloc.receptionAntennaId === receptionAntennaId &&
+          alloc.receptionSatelliteId !== receptionSatelliteId
+        ) {
+          const antenna = await this.antennaRepository.findOne({
+            where: { id: receptionAntennaId },
+            relations: ['station'],
+          });
+          const requestedSatellite = await this.operationOrdersRepository.manager
+            .getRepository('Satellite')
+            .findOne({ where: { id: receptionSatelliteId } });
+
+          conflicts.push({
+            direction: 'reception',
+            antennaId: receptionAntennaId,
+            antennaName: antenna
+              ? `${antenna.station?.name || ''} - ${antenna.frequencyBand.toUpperCase()} - ${antenna.size}m`
+              : `אנטנה ${receptionAntennaId}`,
+            conflictingSatelliteId: alloc.receptionSatelliteId,
+            conflictingSatelliteName: alloc.receptionSatellite?.name || `לוויין ${alloc.receptionSatelliteId}`,
+            requestedSatelliteId: receptionSatelliteId,
+            requestedSatelliteName: (requestedSatellite as { name: string } | null)?.name || `לוויין ${receptionSatelliteId}`,
+            operationOrderId: alloc.operationOrderId,
+            operationOrderName: alloc.operationOrder?.name || `פקודה ${alloc.operationOrderId}`,
+          });
+          break;
+        }
+
+        if (
+          alloc.transmissionAntennaId === receptionAntennaId &&
+          alloc.transmissionSatelliteId !== receptionSatelliteId
+        ) {
+          const antenna = await this.antennaRepository.findOne({
+            where: { id: receptionAntennaId },
+            relations: ['station'],
+          });
+          const requestedSatellite = await this.operationOrdersRepository.manager
+            .getRepository('Satellite')
+            .findOne({ where: { id: receptionSatelliteId } });
+
+          conflicts.push({
+            direction: 'reception',
+            antennaId: receptionAntennaId,
+            antennaName: antenna
+              ? `${antenna.station?.name || ''} - ${antenna.frequencyBand.toUpperCase()} - ${antenna.size}m`
+              : `אנטנה ${receptionAntennaId}`,
+            conflictingSatelliteId: alloc.transmissionSatelliteId,
+            conflictingSatelliteName: alloc.transmissionSatellite?.name || `לוויין ${alloc.transmissionSatelliteId}`,
+            requestedSatelliteId: receptionSatelliteId,
+            requestedSatelliteName: (requestedSatellite as { name: string } | null)?.name || `לוויין ${receptionSatelliteId}`,
+            operationOrderId: alloc.operationOrderId,
+            operationOrderName: alloc.operationOrder?.name || `פקודה ${alloc.operationOrderId}`,
+          });
+          break;
+        }
+      }
+    }
+
+    return { hasConflicts: conflicts.length > 0, conflicts };
+  }
+
+  async validateChannelConflicts(
+    operationOrderId: number,
+    transmissionConnectivityId: number | null,
+    transmissionChannelNumber: number | null,
+    receptionConnectivityId: number | null,
+    receptionChannelNumber: number | null,
+    excludeAllocationId?: number,
+  ): Promise<{
+    hasConflicts: boolean;
+    conflicts: Array<{
+      direction: 'transmission' | 'reception';
+      connectivityId: number;
+      channelNumber: number;
+      operationOrderId: number;
+      operationOrderName: string;
+    }>;
+  }> {
+    const conflicts: Array<{
+      direction: 'transmission' | 'reception';
+      connectivityId: number;
+      channelNumber: number;
+      operationOrderId: number;
+      operationOrderName: string;
+    }> = [];
+
+    const overlappingOrderIds = await this.getOverlappingOperationOrderIds(operationOrderId);
+
+    if (overlappingOrderIds.length === 0) {
+      return { hasConflicts: false, conflicts: [] };
+    }
+
+    const allocationsInOverlappingOrders = await this.allocationsRepository.find({
+      where: {
+        operationOrderId: In(overlappingOrderIds),
+        isDeleted: false,
+      },
+      relations: ['operationOrder'],
+    });
+
+    const filteredAllocations = allocationsInOverlappingOrders.filter(
+      (alloc) => !excludeAllocationId || alloc.id !== excludeAllocationId,
+    );
+
+    if (transmissionConnectivityId && transmissionChannelNumber) {
+      for (const alloc of filteredAllocations) {
+        if (
+          (alloc.transmissionConnectivityId === transmissionConnectivityId &&
+            alloc.transmissionChannelNumber === transmissionChannelNumber) ||
+          (alloc.receptionConnectivityId === transmissionConnectivityId &&
+            alloc.receptionChannelNumber === transmissionChannelNumber)
+        ) {
+          conflicts.push({
+            direction: 'transmission',
+            connectivityId: transmissionConnectivityId,
+            channelNumber: transmissionChannelNumber,
+            operationOrderId: alloc.operationOrderId,
+            operationOrderName: alloc.operationOrder?.name || `פקודה ${alloc.operationOrderId}`,
+          });
+          break;
+        }
+      }
+    }
+
+    if (receptionConnectivityId && receptionChannelNumber) {
+      for (const alloc of filteredAllocations) {
+        if (
+          (alloc.receptionConnectivityId === receptionConnectivityId &&
+            alloc.receptionChannelNumber === receptionChannelNumber) ||
+          (alloc.transmissionConnectivityId === receptionConnectivityId &&
+            alloc.transmissionChannelNumber === receptionChannelNumber)
+        ) {
+          conflicts.push({
+            direction: 'reception',
+            connectivityId: receptionConnectivityId,
+            channelNumber: receptionChannelNumber,
+            operationOrderId: alloc.operationOrderId,
+            operationOrderName: alloc.operationOrder?.name || `פקודה ${alloc.operationOrderId}`,
+          });
+          break;
+        }
+      }
+    }
+
+    return { hasConflicts: conflicts.length > 0, conflicts };
   }
 }

@@ -23,10 +23,9 @@ export class SatellitesService {
     });
   }
 
-  async findAllSummary(): Promise<Array<{ id: number; name: string }>> {
+  async findAllSummary(): Promise<Array<{ id: number; name: string; isDeleted: boolean }>> {
     return this.satellitesRepository.find({
-      select: ['id', 'name'],
-      where: { isDeleted: false },
+      select: ['id', 'name', 'isDeleted'],
     });
   }
 

@@ -421,6 +421,7 @@ export class OperationOrdersService {
       stationId: number;
       stationName: string;
       displayName: string;
+      isDeleted: boolean;
     }>
   > {
     const antennas = await this.antennaRepository.find({
@@ -434,6 +435,7 @@ export class OperationOrdersService {
       stationId: antenna.stationId,
       stationName: antenna.station?.name || '',
       displayName: `${antenna.station?.name || ''} - ${antenna.frequencyBand.toUpperCase()} - ${antenna.size}m`,
+      isDeleted: antenna.station?.isDeleted || false,
     }));
   }
 

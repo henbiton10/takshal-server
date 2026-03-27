@@ -13,6 +13,7 @@ import { CreateOperationOrderDto } from './dto/create-operation-order.dto';
 import { UpdateOperationOrderDto } from './dto/update-operation-order.dto';
 import { CreateAllocationDto } from './dto/create-allocation.dto';
 import { UpdateAllocationDto } from './dto/update-allocation.dto';
+import { ReorderAllocationsDto } from './dto/reorder-allocations.dto';
 import { OperationOrder } from './entities/operation-order.entity';
 import { Allocation } from './entities/allocation.entity';
 
@@ -82,6 +83,11 @@ export class OperationOrdersController {
       body.operationOrderId,
       body.excludeAllocationId,
     );
+  }
+
+  @Post('reorder-allocations')
+  reorderAllocations(@Body() reorderDto: ReorderAllocationsDto): Promise<void> {
+    return this.operationOrdersService.reorderAllocations(reorderDto.allocations);
   }
 }
 

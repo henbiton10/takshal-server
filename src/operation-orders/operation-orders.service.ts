@@ -436,4 +436,13 @@ export class OperationOrdersService {
       displayName: `${antenna.station?.name || ''} - ${antenna.frequencyBand.toUpperCase()} - ${antenna.size}m`,
     }));
   }
+
+  async reorderAllocations(updates: Array<{ id: number; orderNumber: number; subOrderNumber: number | null }>): Promise<void> {
+    for (const update of updates) {
+      await this.allocationsRepository.update(update.id, {
+        orderNumber: update.orderNumber,
+        subOrderNumber: update.subOrderNumber,
+      });
+    }
+  }
 }

@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Station } from '../../stations/entities/station.entity';
+import { TerminalType } from '../../terminal-types/entities/terminal-type.entity';
 
 @Entity('terminals')
 export class Terminal {
@@ -25,6 +26,10 @@ export class Terminal {
 
   @Column({ type: 'integer', name: 'terminal_type_id' })
   terminalTypeId: number;
+
+  @ManyToOne(() => TerminalType)
+  @JoinColumn({ name: 'terminal_type_id' })
+  terminalType: TerminalType;
 
   @Column({
     type: 'enum',

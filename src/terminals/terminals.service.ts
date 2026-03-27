@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Terminal } from './entities/terminal.entity';
+import { TerminalType } from '../terminal-types/entities/terminal-type.entity';
 import { CreateTerminalDto } from './dto/create-terminal.dto';
 import { UpdateTerminalDto } from './dto/update-terminal.dto';
 
@@ -10,13 +11,29 @@ export class TerminalsService {
   constructor(
     @InjectRepository(Terminal)
     private terminalsRepository: Repository<Terminal>,
+    @InjectRepository(TerminalType)
+    private terminalTypesRepository: Repository<TerminalType>,
   ) {}
 
+  private async getOrCreateTerminalType(typeName: string): Promise<number> {
+    let terminalType = await this.terminalTypesRepository.findOne({
+      where: { name: typeName },
+    });
+
+    if (!terminalType) {
+      terminalType = this.terminalTypesRepository.create({ name: typeName });
+      terminalType = await this.terminalTypesRepository.save(terminalType);
+    }
+
+    return terminalType.id;
+  }
+
   async create(createTerminalDto: CreateTerminalDto): Promise<Terminal> {
-    // For now, we'll use terminal_type_id as 1 (will implement dynamic types later)
+    const terminalTypeId = await this.getOrCreateTerminalType(createTerminalDto.terminalType);
+    
     const terminal = this.terminalsRepository.create({
       ...createTerminalDto,
-      terminalTypeId: 1, // Placeholder
+      terminalTypeId,
     });
     return this.terminalsRepository.save(terminal);
   }
@@ -38,7 +55,7 @@ export class TerminalsService {
   async findOne(id: number): Promise<Terminal | null> {
     return this.terminalsRepository.findOne({
       where: { id, isDeleted: false },
-      relations: ['station'],
+      relations: ['station', 'terminalType'],
     });
   }
 
@@ -47,7 +64,14 @@ export class TerminalsService {
     if (!terminal) {
       throw new NotFoundException(`Terminal with ID ${id} not found`);
     }
-    Object.assign(terminal, updateTerminalDto);
+
+    if (updateTerminalDto.terminalType) {
+      const terminalTypeId = await this.getOrCreateTerminalType(updateTerminalDto.terminalType);
+      terminal.terminalTypeId = terminalTypeId;
+    }
+
+    const { terminalType, ...restDto } = updateTerminalDto;
+    Object.assign(terminal, restDto);
     return this.terminalsRepository.save(terminal);
   }
 

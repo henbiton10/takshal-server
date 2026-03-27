@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { TerminalTypesService } from './terminal-types.service';
 
 @Controller('terminal-types')
@@ -15,5 +15,10 @@ export class TerminalTypesController {
   @Get('summary')
   findAllSummary() {
     return this.terminalTypesService.findAllSummary();
+  }
+
+  @Post()
+  create(@Body() body: { name: string }) {
+    return this.terminalTypesService.create(body.name);
   }
 }

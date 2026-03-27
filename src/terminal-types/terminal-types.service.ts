@@ -19,4 +19,9 @@ export class TerminalTypesService {
       select: ['id', 'name'],
     });
   }
+
+  async create(name: string): Promise<TerminalType> {
+    const terminalType = this.terminalTypesRepository.create({ name });
+    return await this.terminalTypesRepository.save(terminalType);
+  }
 }

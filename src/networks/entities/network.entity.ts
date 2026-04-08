@@ -17,8 +17,8 @@ export class Network {
   @Column({ name: 'terminal_type_id', type: 'integer' })
   terminalTypeId: number;
 
-  @Column({ name: 'connectivity_type_id', type: 'integer' })
-  connectivityTypeId: number;
+  @Column({ name: 'connectivity_type_id', type: 'integer', nullable: true })
+  connectivityTypeId?: number;
 
   @Column({
     name: 'readiness_status',

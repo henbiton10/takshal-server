@@ -59,10 +59,20 @@ export class StationsService {
   }
 
   async findAll(): Promise<Station[]> {
-    return this.stationsRepository.find({
+    const stations = await this.stationsRepository.find({
       where: { isDeleted: false },
-      relations: ['connectivities', 'connectivities.connectedStation', 'antennas'],
+      relations: [
+        'connectivities', 'connectivities.connectedStation',
+        'reverseConnectivities', 'reverseConnectivities.station',
+        'antennas',
+      ],
     });
+
+    for (const station of stations) {
+      this.mergeReverseConnectivities(station);
+    }
+
+    return stations;
   }
 
   async findAllSummary(): Promise<Array<{ id: number; name: string }>> {
@@ -73,10 +83,41 @@ export class StationsService {
   }
 
   async findOne(id: number): Promise<Station | null> {
-    return this.stationsRepository.findOne({
+    const station = await this.stationsRepository.findOne({
       where: { id, isDeleted: false },
-      relations: ['connectivities', 'connectivities.connectedStation', 'antennas'],
+      relations: [
+        'connectivities', 'connectivities.connectedStation',
+        'reverseConnectivities', 'reverseConnectivities.station',
+        'antennas',
+      ],
     });
+
+    if (station) {
+      this.mergeReverseConnectivities(station);
+    }
+
+    return station;
+  }
+
+  private mergeReverseConnectivities(station: Station): void {
+    const reverseAsForward = (station.reverseConnectivities || []).map((rc) => {
+      const flipped = new StationConnectivity();
+      flipped.id = rc.id;
+      flipped.stationId = rc.connectedStationId;
+      flipped.connectedStationId = rc.stationId;
+      flipped.communicationType = rc.communicationType;
+      flipped.channelCount = rc.channelCount;
+      flipped.createdAt = rc.createdAt;
+      flipped.connectedStation = rc.station;
+      return flipped;
+    });
+
+    station.connectivities = [
+      ...(station.connectivities || []),
+      ...reverseAsForward,
+    ];
+
+    delete (station as any).reverseConnectivities;
   }
 
   async update(id: number, updateStationDto: UpdateStationDto): Promise<Station> {
@@ -95,7 +136,25 @@ export class StationsService {
     
     await this.stationsRepository.save(station);
 
+    const existingConnectivities = await this.connectivityRepository.find({
+      select: ['id'],
+      where: [{ stationId: id }, { connectedStationId: id }],
+    });
+    const connectivityIdsToDelete = existingConnectivities.map((c) => c.id);
+
+    if (connectivityIdsToDelete.length > 0) {
+      await this.connectivityRepository.manager.query(
+        `UPDATE allocations SET transmission_connectivity_id = NULL WHERE transmission_connectivity_id = ANY($1)`,
+        [connectivityIdsToDelete],
+      );
+      await this.connectivityRepository.manager.query(
+        `UPDATE allocations SET reception_connectivity_id = NULL WHERE reception_connectivity_id = ANY($1)`,
+        [connectivityIdsToDelete],
+      );
+    }
+
     await this.connectivityRepository.delete({ stationId: id });
+    await this.connectivityRepository.delete({ connectedStationId: id });
     if (updateStationDto.connectivities && updateStationDto.connectivities.length > 0) {
       const connectivities = updateStationDto.connectivities.map((conn) =>
         this.connectivityRepository.create({
@@ -106,6 +165,19 @@ export class StationsService {
         }),
       );
       await this.connectivityRepository.save(connectivities);
+    }
+
+    const existingAntennas = await this.antennaRepository.find({
+      select: ['id'],
+      where: { stationId: id },
+    });
+    const antennaIdsToDelete = existingAntennas.map((a) => a.id);
+
+    if (antennaIdsToDelete.length > 0) {
+      await this.antennaRepository.manager.query(
+        `DELETE FROM allocations WHERE transmission_antenna_id = ANY($1) OR reception_antenna_id = ANY($1)`,
+        [antennaIdsToDelete],
+      );
     }
 
     await this.antennaRepository.delete({ stationId: id });

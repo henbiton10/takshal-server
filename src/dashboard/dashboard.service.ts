@@ -90,18 +90,10 @@ export class DashboardService {
       endTime,
     );
     const activeTerminalIds = new Set(activeAllocations.map((allocation) => allocation.terminalId));
-    const activeStationIds = new Set(
-      activeAllocations
-        .map((allocation) => allocation.terminal?.stationId)
-        .filter((stationId): stationId is number => typeof stationId === 'number'),
-    );
 
-    return stations
-      .filter((station) => activeStationIds.has(station.id))
-      .map((station) => {
+    return stations.map((station) => {
       const stationTerminals = terminals.filter(
-        (terminal) =>
-          terminal.stationId === station.id && activeTerminalIds.has(terminal.id),
+        (terminal) => terminal.stationId === station.id,
       );
 
       const dashboardTerminals: DashboardTerminalDto[] = stationTerminals.map(
@@ -115,11 +107,14 @@ export class DashboardService {
               const results: TerminalAllocationInfoDto[] = [];
 
                 if (alloc.transmissionSatellite) {
+                const txAntennaName = alloc.transmissionAntenna?.station?.name || station.name;
+                const txAntennaSize = Number(alloc.transmissionAntenna?.size) || '';
+                const txFreqBand = ((alloc.transmissionAntenna?.frequencyBand as 'ka' | 'ku') || (terminal.frequencyBand as 'ka' | 'ku') || 'ku').toUpperCase();
                 results.push({
                   direction: 'transmission',
                   frequency: Number(alloc.transmissionFrequency),
                   satellite: alloc.transmissionSatellite?.name || '',
-                  antenna: `אנטנה ${Number(alloc.transmissionAntenna?.size) || ''}מ'`,
+                  antenna: `${txAntennaName} ${txAntennaSize}מ' ${txFreqBand}`,
                   antennaSize: Number(alloc.transmissionAntenna?.size) || 0,
                   frequencyBand: (terminal.frequencyBand as 'ka' | 'ku') || 'ku',
                   channel: alloc.transmissionChannelNumber?.toString() || '',
@@ -128,11 +123,14 @@ export class DashboardService {
               }
 
               if (alloc.receptionSatellite) {
+                const rxAntennaName = alloc.receptionAntenna?.station?.name || station.name;
+                const rxAntennaSize = Number(alloc.receptionAntenna?.size) || '';
+                const rxFreqBand = ((alloc.receptionAntenna?.frequencyBand as 'ka' | 'ku') || (terminal.frequencyBand as 'ka' | 'ku') || 'ku').toUpperCase();
                 results.push({
                   direction: 'reception',
                   frequency: Number(alloc.receptionFrequency),
                   satellite: alloc.receptionSatellite?.name || '',
-                  antenna: `אנטנה ${Number(alloc.receptionAntenna?.size) || ''}מ'`,
+                  antenna: `${rxAntennaName} ${rxAntennaSize}מ' ${rxFreqBand}`,
                   antennaSize: Number(alloc.receptionAntenna?.size) || 0,
                   frequencyBand: (terminal.frequencyBand as 'ka' | 'ku') || 'ku',
                   channel: alloc.receptionChannelNumber?.toString() || '',
@@ -386,7 +384,9 @@ export class DashboardService {
         'transmissionSatellite',
         'receptionSatellite',
         'transmissionAntenna',
+        'transmissionAntenna.station',
         'receptionAntenna',
+        'receptionAntenna.station',
         'transmissionConnectivity',
         'receptionConnectivity',
       ],

@@ -16,8 +16,8 @@ export class CreateNetworkDto {
   terminalTypeId: number;
 
   @IsNumber()
-  @IsNotEmpty()
-  connectivityTypeId: number;
+  @IsOptional()
+  connectivityTypeId?: number;
 
   @IsEnum(ReadinessStatus)
   @IsNotEmpty()

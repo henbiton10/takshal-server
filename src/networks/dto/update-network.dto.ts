@@ -11,8 +11,8 @@ export class UpdateNetworkDto {
   terminalTypeId: number;
 
   @IsNumber()
-  @IsNotEmpty()
-  connectivityTypeId: number;
+  @IsOptional()
+  connectivityTypeId?: number;
 
   @IsEnum(ReadinessStatus)
   @IsNotEmpty()

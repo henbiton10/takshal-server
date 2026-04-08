@@ -49,6 +49,9 @@ export class Station {
   @OneToMany(() => StationConnectivity, (connectivity) => connectivity.station)
   connectivities: StationConnectivity[];
 
+  @OneToMany(() => StationConnectivity, (connectivity) => connectivity.connectedStation)
+  reverseConnectivities: StationConnectivity[];
+
   @OneToMany(() => StationAntenna, (antenna) => antenna.station)
   antennas: StationAntenna[];
 }

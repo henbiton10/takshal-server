@@ -1,6 +1,7 @@
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
+import { DB_SCHEMA } from './schema.constants';
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ export const createKyselyInstance = () => {
       user: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
+      options: `-c search_path="${DB_SCHEMA}",public`,
     }),
   });
 

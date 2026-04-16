@@ -11,6 +11,7 @@ import { TerminalTypesModule } from './terminal-types/terminal-types.module';
 import { ConnectivityTypesModule } from './connectivity-types/connectivity-types.module';
 import { OperationOrdersModule } from './operation-orders/operation-orders.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AuthProxyModule } from './auth-proxy/auth-proxy.module';
 
 @Module({
   imports: [
@@ -24,8 +25,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ConnectivityTypesModule,
     OperationOrdersModule,
     DashboardModule,
+    AuthProxyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
+

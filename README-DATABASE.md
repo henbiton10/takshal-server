@@ -29,11 +29,11 @@ cp .env.example .env
 
 2. Update the database credentials in `.env` if needed:
 ```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
-DB_NAME=takshal_db
+POSTGRES_DB_HOST=localhost
+POSTGRES_DB_PORT=5432
+POSTGRES_DB_USERNAME=postgres
+POSTGRES_DB_PASSWORD=postgres
+POSTGRES_DB_NAME=takshal_db
 ```
 
 3. Create the database:

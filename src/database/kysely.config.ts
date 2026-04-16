@@ -8,11 +8,11 @@ dotenv.config();
 export const createKyselyInstance = () => {
   const dialect = new PostgresDialect({
     pool: new Pool({
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT || '5432'),
-      user: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
+      host: process.env.POSTGRES_DB_HOST,
+      port: parseInt(process.env.POSTGRES_DB_PORT || '5432'),
+      user: process.env.POSTGRES_DB_USERNAME,
+      password: process.env.POSTGRES_DB_PASSWORD,
+      database: process.env.POSTGRES_DB_NAME,
       options: `-c search_path="${DB_SCHEMA}",public`,
     }),
   });

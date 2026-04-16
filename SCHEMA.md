@@ -190,5 +190,48 @@ Tables with `updated_at` columns have triggers that automatically update the tim
 
 Indexes are created on:
 - All unique name columns
-- All foreign key columns
 - Frequently queried fields (station_id, terminal_type_id, etc.)
+
+### 10. Operation Orders
+
+```
+operation_orders
+├── id (serial, PK)
+├── name (varchar, required)
+├── start_date (date, required)
+├── start_time (time, required)
+├── is_deleted (boolean, default: false)
+├── deleted_at (timestamp, nullable)
+├── created_at (timestamp)
+└── updated_at (timestamp, auto-update)
+```
+
+### 11. Allocations
+
+```
+allocations
+├── id (serial, PK)
+├── operation_order_id (integer, FK → operation_orders.id)
+├── parent_allocation_id (integer, FK → allocations.id, nullable)
+├── order_number (integer, required)
+├── sub_order_number (integer, nullable)
+├── terminal_id (integer, FK → terminals.id)
+├── transmission_satellite_id (integer, FK → satellites.id)
+├── transmission_antenna_id (integer, FK → station_antennas.id)
+├── transmission_frequency (decimal, required)
+├── reception_satellite_id (integer, FK → satellites.id)
+├── reception_antenna_id (integer, FK → station_antennas.id)
+├── reception_frequency (decimal, required)
+├── transmission_connectivity_id (integer, FK → station_connectivities.id, nullable)
+├── reception_connectivity_id (integer, FK → station_connectivities.id, nullable)
+├── transmission_channel_number (integer, nullable)
+├── reception_channel_number (integer, nullable)
+├── tail_numbers (integer[], array, nullable)  <-- *UPDATED*
+├── notes (text, nullable)
+├── has_conflict (boolean, default: false)
+├── conflict_ignored (boolean, default: false)
+├── is_deleted (boolean, default: false)
+├── deleted_at (timestamp, nullable)
+├── created_at (timestamp)
+└── updated_at (timestamp, auto-update)
+```

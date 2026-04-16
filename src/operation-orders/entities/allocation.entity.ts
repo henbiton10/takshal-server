@@ -103,8 +103,8 @@ export class Allocation {
   @Column({ name: 'reception_channel_number', type: 'int', nullable: true })
   receptionChannelNumber: number | null;
 
-  @Column({ name: 'tail_number', type: 'int', nullable: true })
-  tailNumber: number | null;
+  @Column({ name: 'tail_numbers', type: 'int', array: true, nullable: true })
+  tailNumbers: number[] | null;
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;

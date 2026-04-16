@@ -3,6 +3,7 @@ import {
   IsOptional,
   IsString,
   IsBoolean,
+  IsArray,
   Min,
 } from 'class-validator';
 
@@ -50,9 +51,10 @@ export class CreateAllocationDto {
   @IsOptional()
   receptionChannelNumber?: number | null;
 
-  @IsNumber()
+  @IsArray()
+  @IsNumber({}, { each: true })
   @IsOptional()
-  tailNumber?: number | null;
+  tailNumbers?: number[] | null;
 
   @IsString()
   @IsOptional()

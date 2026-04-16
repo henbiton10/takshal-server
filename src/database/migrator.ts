@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { Kysely, Migrator, FileMigrationProvider } from 'kysely';
 import { db } from './kysely.config';
+import { DB_SCHEMA } from './schema.constants';
 
 async function runMigrations() {
   // Use process.cwd() to get the correct path when running with ts-node
@@ -9,6 +10,7 @@ async function runMigrations() {
   
   const migrator = new Migrator({
     db: db as Kysely<any>,
+    migrationTableSchema: DB_SCHEMA,
     provider: new FileMigrationProvider({
       fs,
       path,
@@ -41,6 +43,7 @@ async function rollbackMigration() {
   
   const migrator = new Migrator({
     db: db as Kysely<any>,
+    migrationTableSchema: DB_SCHEMA,
     provider: new FileMigrationProvider({
       fs,
       path,

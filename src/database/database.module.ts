@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
+import { DB_SCHEMA } from './schema.constants';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ dotenv.config();
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
+      schema: DB_SCHEMA,
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       synchronize: false,
       logging: process.env.NODE_ENV === 'development',

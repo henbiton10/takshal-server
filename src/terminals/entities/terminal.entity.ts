@@ -13,7 +13,7 @@ export class Terminal {
   @Column({ type: 'integer', name: 'station_id' })
   stationId: number;
 
-  @ManyToOne(() => Station)
+  @ManyToOne(() => Station, station => station.terminals)
   @JoinColumn({ name: 'station_id' })
   station: Station;
 

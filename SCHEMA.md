@@ -200,6 +200,8 @@ operation_orders
 ├── name (varchar, required)
 ├── start_date (date, required)
 ├── start_time (time, required)
+├── end_date (date, required)
+├── end_time (time, required)
 ├── is_deleted (boolean, default: false)
 ├── deleted_at (timestamp, nullable)
 ├── created_at (timestamp)

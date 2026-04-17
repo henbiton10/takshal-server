@@ -65,6 +65,7 @@ export class StationsService {
         'connectivities', 'connectivities.connectedStation',
         'reverseConnectivities', 'reverseConnectivities.station',
         'antennas',
+        'terminals',
       ],
     });
 
@@ -89,6 +90,7 @@ export class StationsService {
         'connectivities', 'connectivities.connectedStation',
         'reverseConnectivities', 'reverseConnectivities.station',
         'antennas',
+        'terminals',
       ],
     });
 

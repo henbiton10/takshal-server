@@ -31,7 +31,7 @@ cp .env.example .env
 ```env
 POSTGRES_DB_HOST=localhost
 POSTGRES_DB_PORT=5432
-POSTGRES_DB_USERNAME=postgres
+POSTGRES_DB_USER=postgres
 POSTGRES_DB_PASSWORD=postgres
 POSTGRES_DB_NAME=takshal_db
 ```

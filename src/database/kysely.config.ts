@@ -10,7 +10,7 @@ export const createKyselyInstance = () => {
     pool: new Pool({
       host: process.env.POSTGRES_DB_HOST,
       port: parseInt(process.env.POSTGRES_DB_PORT || '5432'),
-      user: process.env.POSTGRES_DB_USERNAME,
+      user: process.env.POSTGRES_DB_USER,
       password: process.env.POSTGRES_DB_PASSWORD,
       database: process.env.POSTGRES_DB_NAME,
       options: `-c search_path="${DB_SCHEMA}",public`,

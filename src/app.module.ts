@@ -12,9 +12,13 @@ import { ConnectivityTypesModule } from './connectivity-types/connectivity-types
 import { OperationOrdersModule } from './operation-orders/operation-orders.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthProxyModule } from './auth-proxy/auth-proxy.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
+    EventsModule,
     DatabaseModule,
     HealthModule,
     SatellitesModule,

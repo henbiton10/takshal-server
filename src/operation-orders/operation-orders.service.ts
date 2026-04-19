@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OperationOrder } from './entities/operation-order.entity';
 import { Allocation } from './entities/allocation.entity';
 import { CreateOperationOrderDto } from './dto/create-operation-order.dto';
@@ -24,11 +25,20 @@ export class OperationOrdersService {
     private antennaRepository: Repository<StationAntenna>,
     @InjectRepository(Terminal)
     private terminalRepository: Repository<Terminal>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(createDto: CreateOperationOrderDto): Promise<OperationOrder> {
     const order = this.operationOrdersRepository.create(createDto);
-    return this.operationOrdersRepository.save(order);
+    const saved = await this.operationOrdersRepository.save(order);
+    
+    this.eventEmitter.emit('entity.created', {
+      entity: 'operation-order',
+      id: saved.id,
+      data: saved,
+    });
+    
+    return saved;
   }
 
   async findAll(): Promise<OperationOrder[]> {
@@ -93,6 +103,13 @@ export class OperationOrdersService {
     if (!result) {
       throw new NotFoundException(`Failed to retrieve updated operation order`);
     }
+
+    this.eventEmitter.emit('entity.updated', {
+      entity: 'operation-order',
+      id: result.id,
+      data: result,
+    });
+
     return result;
   }
 
@@ -112,6 +129,11 @@ export class OperationOrdersService {
       { operationOrderId: id },
       { isDeleted: true },
     );
+
+    this.eventEmitter.emit('entity.deleted', {
+      entity: 'operation-order',
+      id,
+    });
   }
 
   async addAllocation(
@@ -168,7 +190,14 @@ export class OperationOrdersService {
     });
 
     const saved = await this.allocationsRepository.save(allocation);
-    return this.findAllocationById(saved.id);
+    const result = await this.findAllocationById(saved.id);
+
+    this.eventEmitter.emit('entity.updated', {
+      entity: 'operation-order',
+      id: operationOrderId,
+    });
+
+    return result;
   }
 
   async updateAllocation(id: number, updateDto: UpdateAllocationDto): Promise<Allocation> {
@@ -182,6 +211,11 @@ export class OperationOrdersService {
 
     Object.assign(allocation, updateDto);
     await this.allocationsRepository.save(allocation);
+
+    this.eventEmitter.emit('entity.updated', {
+      entity: 'operation-order',
+      id: allocation.operationOrderId,
+    });
 
     return this.findAllocationById(id);
   }
@@ -244,6 +278,11 @@ export class OperationOrdersService {
         }
       }
     }
+
+    this.eventEmitter.emit('entity.updated', {
+      entity: 'operation-order',
+      id: allocation.operationOrderId,
+    });
   }
 
   async addSubAllocation(

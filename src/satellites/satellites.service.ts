@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Satellite } from './entities/satellite.entity';
 import { CreateSatelliteDto } from './dto/create-satellite.dto';
 import { UpdateSatelliteDto } from './dto/update-satellite.dto';
@@ -10,11 +11,20 @@ export class SatellitesService {
   constructor(
     @InjectRepository(Satellite)
     private satellitesRepository: Repository<Satellite>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(createSatelliteDto: CreateSatelliteDto): Promise<Satellite> {
     const satellite = this.satellitesRepository.create(createSatelliteDto);
-    return this.satellitesRepository.save(satellite);
+    const saved = await this.satellitesRepository.save(satellite);
+    
+    this.eventEmitter.emit('entity.created', {
+      entity: 'satellite',
+      id: saved.id,
+      data: saved,
+    });
+    
+    return saved;
   }
 
   async findAll(): Promise<Satellite[]> {
@@ -42,7 +52,15 @@ export class SatellitesService {
     }
     
     Object.assign(satellite, updateSatelliteDto);
-    return this.satellitesRepository.save(satellite);
+    const saved = await this.satellitesRepository.save(satellite);
+
+    this.eventEmitter.emit('entity.updated', {
+      entity: 'satellite',
+      id: saved.id,
+      data: saved,
+    });
+
+    return saved;
   }
 
   async remove(id: number): Promise<void> {
@@ -53,5 +71,10 @@ export class SatellitesService {
 
     satellite.isDeleted = true;
     await this.satellitesRepository.save(satellite);
+
+    this.eventEmitter.emit('entity.deleted', {
+      entity: 'satellite',
+      id,
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Station } from './entities/station.entity';
 import { StationConnectivity } from './entities/station-connectivity.entity';
 import { StationAntenna } from './entities/station-antenna.entity';
@@ -16,6 +17,7 @@ export class StationsService {
     private connectivityRepository: Repository<StationConnectivity>,
     @InjectRepository(StationAntenna)
     private antennaRepository: Repository<StationAntenna>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(createStationDto: CreateStationDto): Promise<Station> {
@@ -55,6 +57,13 @@ export class StationsService {
     if (!result) {
       throw new NotFoundException(`Failed to retrieve created station`);
     }
+
+    this.eventEmitter.emit('entity.created', {
+      entity: 'station',
+      id: result.id,
+      data: result,
+    });
+
     return result;
   }
 
@@ -198,6 +207,13 @@ export class StationsService {
     if (!result) {
       throw new NotFoundException(`Failed to retrieve updated station`);
     }
+
+    this.eventEmitter.emit('entity.updated', {
+      entity: 'station',
+      id: result.id,
+      data: result,
+    });
+
     return result;
   }
 
@@ -212,5 +228,10 @@ export class StationsService {
 
     station.isDeleted = true;
     await this.stationsRepository.save(station);
+
+    this.eventEmitter.emit('entity.deleted', {
+      entity: 'station',
+      id,
+    });
   }
 }

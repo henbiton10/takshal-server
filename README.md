@@ -8,6 +8,7 @@ The backend engine for the Takshal Management System, built with NestJS and Post
 - **Operation Planning Engine**: Complex management of operation orders and multi-level allocations.
 - **Conflict Validation**: Intelligent checking for satellite and frequency conflicts.
 - **Soft Delete**: Data safety with logical deletion throughout the system.
+- **Real-time Event Broadcasting**: Instant synchronization across all connected clients using WebSockets.
 - **Audit Logs**: Automatic timestamp management via database triggers.
 
 ## Architecture
@@ -15,6 +16,8 @@ The backend engine for the Takshal Management System, built with NestJS and Post
 - **Framework**: NestJS
 - **Database**: PostgreSQL
 - **ORM**: TypeORM
+- **Real-time**: Socket.io with NestJS WebSockets
+- **Internal Events**: NestJS EventEmitter2 for decoupled service communications
 - **Validation**: Class-validator with DTOs
 - **Migrations**: Automated database schema management
 

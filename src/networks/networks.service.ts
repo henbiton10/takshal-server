@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Network } from './entities/network.entity';
 import { CreateNetworkDto } from './dto/create-network.dto';
 import { UpdateNetworkDto } from './dto/update-network.dto';
@@ -10,11 +11,20 @@ export class NetworksService {
   constructor(
     @InjectRepository(Network)
     private networksRepository: Repository<Network>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(createNetworkDto: CreateNetworkDto): Promise<Network> {
     const network = this.networksRepository.create(createNetworkDto);
-    return await this.networksRepository.save(network);
+    const saved = await this.networksRepository.save(network);
+
+    this.eventEmitter.emit('entity.created', {
+      entity: 'network',
+      id: saved.id,
+      data: saved,
+    });
+
+    return saved;
   }
 
   async findAll(): Promise<Network[]> {
@@ -43,7 +53,15 @@ export class NetworksService {
     }
     
     Object.assign(network, updateNetworkDto);
-    return await this.networksRepository.save(network);
+    const saved = await this.networksRepository.save(network);
+
+    this.eventEmitter.emit('entity.updated', {
+      entity: 'network',
+      id: saved.id,
+      data: saved,
+    });
+
+    return saved;
   }
 
   async remove(id: number): Promise<void> {
@@ -54,5 +72,10 @@ export class NetworksService {
 
     network.isDeleted = true;
     await this.networksRepository.save(network);
+
+    this.eventEmitter.emit('entity.deleted', {
+      entity: 'network',
+      id,
+    });
   }
 }

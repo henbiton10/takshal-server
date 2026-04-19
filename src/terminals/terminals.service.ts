@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Terminal } from './entities/terminal.entity';
 import { TerminalType } from '../terminal-types/entities/terminal-type.entity';
 import { CreateTerminalDto } from './dto/create-terminal.dto';
@@ -13,6 +14,7 @@ export class TerminalsService {
     private terminalsRepository: Repository<Terminal>,
     @InjectRepository(TerminalType)
     private terminalTypesRepository: Repository<TerminalType>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   private async getOrCreateTerminalType(typeName: string): Promise<number> {
@@ -36,7 +38,15 @@ export class TerminalsService {
       ...terminalData,
       terminalTypeId,
     });
-    return this.terminalsRepository.save(terminal);
+    const saved = await this.terminalsRepository.save(terminal);
+
+    this.eventEmitter.emit('entity.created', {
+      entity: 'terminal',
+      id: saved.id,
+      data: saved,
+    });
+
+    return saved;
   }
 
   async findAll(): Promise<Terminal[]> {
@@ -73,7 +83,15 @@ export class TerminalsService {
 
     const { terminalType, ...restDto } = updateTerminalDto;
     Object.assign(terminal, restDto);
-    return this.terminalsRepository.save(terminal);
+    const saved = await this.terminalsRepository.save(terminal);
+
+    this.eventEmitter.emit('entity.updated', {
+      entity: 'terminal',
+      id: saved.id,
+      data: saved,
+    });
+
+    return saved;
   }
 
   async remove(id: number): Promise<void> {
@@ -84,5 +102,10 @@ export class TerminalsService {
 
     terminal.isDeleted = true;
     await this.terminalsRepository.save(terminal);
+
+    this.eventEmitter.emit('entity.deleted', {
+      entity: 'terminal',
+      id,
+    });
   }
 }

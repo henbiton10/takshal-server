@@ -17,7 +17,12 @@ dotenv.config();
       schema: DB_SCHEMA,
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       synchronize: false,
-      logging: process.env.NODE_ENV === 'development',
+      logging: process.env.ENVIRONMENT === 'local' || process.env.ENVIRONMENT === 'np',
+      ssl: (process.env.ENVIRONMENT === 'local' || process.env.ENVIRONMENT === 'np') ? false : {
+        rejectUnauthorized: false,
+        cert: process.env.POSTGRES_DB_SSL_CERT,
+        key: process.env.POSTGRES_DB_SSL_KEY,
+      },
     }),
   ],
 })

@@ -14,6 +14,11 @@ export const createKyselyInstance = () => {
       password: process.env.POSTGRES_DB_PASSWORD,
       database: process.env.POSTGRES_DB_NAME,
       options: `-c search_path="${DB_SCHEMA}",public`,
+      ssl: (process.env.ENVIRONMENT === 'local' || process.env.ENVIRONMENT === 'np') ? false : {
+        rejectUnauthorized: false,
+        cert: process.env.POSTGRES_DB_SSL_CERT,
+        key: process.env.POSTGRES_DB_SSL_KEY,
+      },
     }),
   });
 

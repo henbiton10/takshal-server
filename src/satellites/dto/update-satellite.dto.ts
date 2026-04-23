@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty, IsEnum, IsBoolean, IsOptional } from 'class-validator';
-import { Affiliation, ReadinessStatus } from './create-satellite.dto';
+import { IsString, IsNotEmpty, IsEnum, IsBoolean, IsOptional, ValidateIf } from 'class-validator';
+import { Affiliation, ReadinessStatus, FrequencyBand } from './create-satellite.dto';
 
 export class UpdateSatelliteDto {
   @IsString()
@@ -13,6 +13,11 @@ export class UpdateSatelliteDto {
   @IsBoolean()
   @IsNotEmpty()
   hasFrequencyConverter: boolean;
+
+  @ValidateIf((o) => o.frequencyBand !== null)
+  @IsEnum(FrequencyBand)
+  @IsOptional()
+  frequencyBand?: FrequencyBand | null;
 
   @IsEnum(ReadinessStatus)
   @IsNotEmpty()

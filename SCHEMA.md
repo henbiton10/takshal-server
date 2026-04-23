@@ -70,6 +70,7 @@ satellites
 ├── name (varchar, unique, required)
 ├── affiliation (enum: israeli/international, required)
 ├── has_frequency_converter (boolean, required)
+├── frequency_band (enum: ka/ku, nullable)
 ├── readiness_status (enum, required)
 ├── notes (text, nullable)
 ├── is_deleted (boolean, default: false)

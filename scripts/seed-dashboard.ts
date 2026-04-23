@@ -60,18 +60,18 @@ async function seed() {
     // 5. Seed 12 Satellites
     const satellites = await db.insertInto('satellites')
       .values([
-        { name: 'AMOS-6', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready' },
-        { name: 'AMOS-17', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready' },
-        { name: 'AMOS-18', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready' },
-        { name: 'AMOS-19', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready' },
-        { name: 'AMOS-20', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready' },
-        { name: 'AMOS-21', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready' },
-        { name: 'AMOS-22', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready' },
-        { name: 'INTELSAT 1', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready' },
-        { name: 'INTELSAT 2', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready' },
-        { name: 'INMARSAT', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready' },
-        { name: 'O3B', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready' },
-        { name: 'IRIDIUM', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready' }
+        { name: 'AMOS-6', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
+        { name: 'AMOS-17', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
+        { name: 'AMOS-18', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
+        { name: 'AMOS-19', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
+        { name: 'AMOS-20', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
+        { name: 'AMOS-21', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
+        { name: 'AMOS-22', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
+        { name: 'INTELSAT 1', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'ku' },
+        { name: 'INTELSAT 2', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'ka' },
+        { name: 'INMARSAT', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
+        { name: 'O3B', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'ka' },
+        { name: 'IRIDIUM', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null }
       ] as any)
       .returning(['id', 'name'])
       .execute();

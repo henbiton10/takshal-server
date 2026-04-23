@@ -24,6 +24,14 @@ export class Satellite {
   })
   readinessStatus: string;
 
+  @Column({
+    type: 'enum',
+    enum: ['ku', 'ka'],
+    nullable: true,
+    name: 'frequency_band',
+  })
+  frequencyBand: string | null;
+
   @Column({ type: 'text', nullable: true })
   notes: string;
 

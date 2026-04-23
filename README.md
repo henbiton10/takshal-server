@@ -40,6 +40,11 @@ $ npm install
 $ docker-compose up -d
 ```
 2. The schema will be automatically synchronized or migrated on startup.
+3. (Optional) Seed the database with sample data:
+```bash
+$ npx ts-node scripts/seed-dashboard.ts
+```
+
 
 ### Running the App
 

@@ -34,9 +34,10 @@ POSTGRES_DB_PORT=5432
 POSTGRES_DB_USER=postgres
 POSTGRES_DB_PASSWORD=postgres
 POSTGRES_DB_NAME=takshal_db
+POSTGRES_DB_SCHEMA=takshal_plan
 ```
 
-3. Create the database:
+4. Create the database:
 ```bash
 # Connect to PostgreSQL
 psql -U postgres
@@ -55,6 +56,24 @@ The database connection will be automatically established when you start the ser
 ```bash
 npm run start:dev
 ```
+
+## Seeding Data
+
+To populate the database with a large set of sample data for testing (especially for the dashboard), you can use the seeding script:
+
+```bash
+# Make sure your .env is configured first
+npx ts-node scripts/seed-dashboard.ts
+```
+
+This script will:
+- Clean all existing data
+- Create 10+ stations with different affiliations (airforce, tikshuv)
+- Create 12 satellites (AMOS, Intelsat, etc.)
+- Create 10+ terminals and antennas
+- Generate 10 overlapping operation orders
+- Populate dense allocations for the dashboard view
+- Create 10 communication networks
 
 ## Database Module
 

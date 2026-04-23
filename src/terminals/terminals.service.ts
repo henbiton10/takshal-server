@@ -82,8 +82,18 @@ export class TerminalsService {
     }
 
     const { terminalType, ...restDto } = updateTerminalDto;
-    Object.assign(terminal, restDto);
-    const saved = await this.terminalsRepository.save(terminal);
+    
+    // Update the terminal using a clean merge of the DTO
+    await this.terminalsRepository.update(id, {
+      ...restDto,
+      ...(terminalType ? { terminalTypeId: await this.getOrCreateTerminalType(terminalType) } : {}),
+    });
+
+    const saved = await this.findOne(id);
+    if (!saved) {
+      throw new NotFoundException(`Terminal with ID ${id} not found after update`);
+    }
+
 
     this.eventEmitter.emit('entity.updated', {
       entity: 'terminal',

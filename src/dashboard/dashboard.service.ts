@@ -263,7 +263,7 @@ export class DashboardService {
         allocations,
       };
     })
-      .filter((satellite) => satellite.allocations.length > 0);
+
   }
 
   async getNetworksWithTerminals(
@@ -428,12 +428,13 @@ export class DashboardService {
 
   private mapAffiliation(
     affiliation: string,
-  ): 'airforce' | 'navy' | 'ground' | 'intelligence' | 'other' {
+  ): 'airforce' | 'navy' | 'ground' | 'intelligence' | 'tikshuv' | 'other' {
     switch (affiliation) {
       case 'airforce':
         return 'airforce';
       case 'tikshuv':
-        return 'intelligence';
+        return 'tikshuv';
+
       default:
         return 'other';
     }

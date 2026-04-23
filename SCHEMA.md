@@ -228,7 +228,7 @@ allocations
 ├── reception_connectivity_id (integer, FK → station_connectivities.id, nullable)
 ├── transmission_channel_number (integer, nullable)
 ├── reception_channel_number (integer, nullable)
-├── tail_numbers (integer[], array, nullable)  <-- *UPDATED*
+├── tail_numbers (integer[], array, nullable)
 ├── notes (text, nullable)
 ├── has_conflict (boolean, default: false)
 ├── conflict_ignored (boolean, default: false)

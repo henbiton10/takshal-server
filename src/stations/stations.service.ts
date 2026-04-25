@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DB_SCHEMA } from '../database/schema.constants';
 import { Station } from './entities/station.entity';
 import { StationConnectivity } from './entities/station-connectivity.entity';
 import { StationAntenna } from './entities/station-antenna.entity';
@@ -155,11 +156,11 @@ export class StationsService {
 
     if (connectivityIdsToDelete.length > 0) {
       await this.connectivityRepository.manager.query(
-        `UPDATE allocations SET transmission_connectivity_id = NULL WHERE transmission_connectivity_id = ANY($1)`,
+        `UPDATE "${DB_SCHEMA}".allocations SET transmission_connectivity_id = NULL WHERE transmission_connectivity_id = ANY($1)`,
         [connectivityIdsToDelete],
       );
       await this.connectivityRepository.manager.query(
-        `UPDATE allocations SET reception_connectivity_id = NULL WHERE reception_connectivity_id = ANY($1)`,
+        `UPDATE "${DB_SCHEMA}".allocations SET reception_connectivity_id = NULL WHERE reception_connectivity_id = ANY($1)`,
         [connectivityIdsToDelete],
       );
     }
@@ -186,7 +187,7 @@ export class StationsService {
 
     if (antennaIdsToDelete.length > 0) {
       await this.antennaRepository.manager.query(
-        `DELETE FROM allocations WHERE transmission_antenna_id = ANY($1) OR reception_antenna_id = ANY($1)`,
+        `DELETE FROM "${DB_SCHEMA}".allocations WHERE transmission_antenna_id = ANY($1) OR reception_antenna_id = ANY($1)`,
         [antennaIdsToDelete],
       );
     }

@@ -50,11 +50,11 @@ async function seed() {
       .values(stations.map((s, i) => ({
         station_id: s.id,
         size: i % 2 === 0 ? 2.4 : 3.7,
-        frequency_band: i % 2 === 0 ? 'ka' : 'ku'
+        frequency_band: i % 2 === 0 ? 'KA' : 'KU'
       })) as any)
       .returning(['id', 'station_id', 'frequency_band'])
       .execute();
-    
+
     console.log('✓ Seeded 10 Antennas');
 
     // 5. Seed 12 Satellites
@@ -67,10 +67,10 @@ async function seed() {
         { name: 'AMOS-20', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
         { name: 'AMOS-21', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
         { name: 'AMOS-22', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
-        { name: 'INTELSAT 1', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'ku' },
-        { name: 'INTELSAT 2', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'ka' },
+        { name: 'INTELSAT 1', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'KU' },
+        { name: 'INTELSAT 2', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'KA' },
         { name: 'INMARSAT', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
-        { name: 'O3B', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'ka' },
+        { name: 'O3B', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'KA' },
         { name: 'IRIDIUM', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null }
       ] as any)
       .returning(['id', 'name'])
@@ -84,7 +84,7 @@ async function seed() {
         name: `טרמינל-${s.name.split(' ')[1] || i}`,
         station_id: s.id,
         terminal_type_id: fixedId,
-        frequency_band: i % 2 === 0 ? 'ka' : 'ku',
+        frequency_band: i % 2 === 0 ? 'KA' : 'KU',
         readiness_status: 'ready'
       })) as any)
       .returning(['id', 'station_id', 'frequency_band'])
@@ -121,29 +121,29 @@ async function seed() {
     // 8. Seed Allocations (dense)
     const allocations: any[] = [];
     for (let i = 0; i < terminals.length; i++) {
-        const terminal = terminals[i];
-        const satellite = satellites[i % satellites.length];
-        const antenna = antennas.find(a => a.station_id === terminal.station_id && a.frequency_band === terminal.frequency_band);
-        const order = orders[i % orders.length];
+      const terminal = terminals[i];
+      const satellite = satellites[i % satellites.length];
+      const antenna = antennas.find(a => a.station_id === terminal.station_id && a.frequency_band === terminal.frequency_band);
+      const order = orders[i % orders.length];
 
-        if (antenna && order) {
-            allocations.push({
-                operation_order_id: order.id,
-                order_number: 1000 + i,
-                terminal_id: terminal.id,
-                transmission_satellite_id: satellite.id,
-                transmission_antenna_id: antenna.id,
-                transmission_frequency: 30.0 + i,
-                reception_satellite_id: satellite.id,
-                reception_antenna_id: antenna.id,
-                reception_frequency: 20.0 + i
-            });
-        }
+      if (antenna && order) {
+        allocations.push({
+          operation_order_id: order.id,
+          order_number: 1000 + i,
+          terminal_id: terminal.id,
+          transmission_satellite_id: satellite.id,
+          transmission_antenna_id: antenna.id,
+          transmission_frequency: 30.0 + i,
+          reception_satellite_id: satellite.id,
+          reception_antenna_id: antenna.id,
+          reception_frequency: 20.0 + i
+        });
+      }
     }
 
     if (allocations.length > 0) {
-        await db.insertInto('allocations').values(allocations).execute();
-        console.log(`✓ Seeded ${allocations.length} Allocations`);
+      await db.insertInto('allocations').values(allocations).execute();
+      console.log(`✓ Seeded ${allocations.length} Allocations`);
     }
 
     // 9. Seed 10 Networks
@@ -161,7 +161,7 @@ async function seed() {
     }
     await db.insertInto('networks').values(networks as any).execute();
     console.log('✓ Seeded 10 Networks');
-    
+
     console.log('✓ MASSIVE seeding completed successfully!');
 
   } catch (error) {

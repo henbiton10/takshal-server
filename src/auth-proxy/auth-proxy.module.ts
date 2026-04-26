@@ -17,8 +17,10 @@ export class AuthProxyModule implements NestModule {
         consumer
           .apply(
             createProxyMiddleware({
+              pathRewrite: (path) => path.replace('/auth', ''),
               target: process.env.AUTH_SERVICE_URL,
               changeOrigin: true,
+              secure: false,
             }),
           )
           .forRoutes({ path: '/auth/(.*)', method: RequestMethod.ALL });
@@ -28,8 +30,10 @@ export class AuthProxyModule implements NestModule {
         consumer
           .apply(
             createProxyMiddleware({
+              pathRewrite: (path) => path.replace('/permissions', ''),
               target: process.env.PERMISSIONS_SERVICE_URL,
               changeOrigin: true,
+              secure: false,
             }),
           )
           .forRoutes({ path: '/permissions/(.*)', method: RequestMethod.ALL });

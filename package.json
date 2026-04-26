@@ -23,7 +23,8 @@
     "migration:run": "ts-node src/database/migrator.ts up",
     "migrate:latest": "ts-node src/database/migrator.ts up",
     "migration:rollback": "ts-node src/database/migrator.ts down",
-    "migration:create": "node scripts/create-migration.js"
+    "migration:create": "node scripts/create-migration.js",
+    "seed:dashboard": "ts-node scripts/seed-dashboard.ts"
   },
   "dependencies": {
     "@nestjs/common": "11.1.18",

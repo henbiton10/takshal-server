@@ -19,10 +19,17 @@ export class Terminal {
 
   @Column({
     type: 'enum',
-    enum: ['ka', 'ku'],
+    enum: ['ka', 'ku', 'cb'],
     name: 'frequency_band',
   })
   frequencyBand: string;
+
+  @Column({ type: 'integer', name: 'second_station_id', nullable: true })
+  secondStationId: number | null;
+
+  @ManyToOne(() => Station)
+  @JoinColumn({ name: 'second_station_id' })
+  secondStation: Station | null;
 
   @Column({ type: 'integer', name: 'terminal_type_id' })
   terminalTypeId: number;

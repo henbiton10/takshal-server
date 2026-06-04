@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { TerminalType } from '../../terminal-types/entities/terminal-type.entity';
 
 @Entity('networks')
 export class Network {
@@ -16,6 +19,10 @@ export class Network {
 
   @Column({ name: 'terminal_type_id', type: 'integer' })
   terminalTypeId: number;
+
+  @ManyToOne(() => TerminalType)
+  @JoinColumn({ name: 'terminal_type_id' })
+  terminalType: TerminalType;
 
   @Column({ name: 'connectivity_type_id', type: 'integer', nullable: true })
   connectivityTypeId?: number;

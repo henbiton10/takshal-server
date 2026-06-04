@@ -10,6 +10,10 @@ export class UpdateTerminalDto {
   @IsNotEmpty()
   stationId: number;
 
+  @IsNumber()
+  @IsOptional()
+  secondStationId?: number | null;
+
   @IsEnum(FrequencyBand)
   @IsNotEmpty()
   frequencyBand: FrequencyBand;

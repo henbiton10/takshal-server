@@ -15,11 +15,11 @@ async function seed() {
     await db.deleteFrom('allocations').execute();
     await db.deleteFrom('operation_orders').execute();
     await db.deleteFrom('terminals').execute();
+    await db.deleteFrom('networks').execute();
     await db.deleteFrom('terminal_types').execute();
     await db.deleteFrom('station_antennas').execute();
     await db.deleteFrom('satellites').execute();
     await db.deleteFrom('stations').execute();
-    await db.deleteFrom('networks').execute();
     await db.deleteFrom('connectivity_types').execute();
 
     console.log('✓ Cleaned existing data');
@@ -50,7 +50,7 @@ async function seed() {
       .values(stations.map((s, i) => ({
         station_id: s.id,
         size: i % 2 === 0 ? 2.4 : 3.7,
-        frequency_band: i % 2 === 0 ? 'KA' : 'KU'
+        frequency_band: i % 2 === 0 ? 'ka' : 'ku'
       })) as any)
       .returning(['id', 'station_id', 'frequency_band'])
       .execute();
@@ -60,18 +60,18 @@ async function seed() {
     // 5. Seed 12 Satellites
     const satellites = await db.insertInto('satellites')
       .values([
-        { name: 'AMOS-6', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
-        { name: 'AMOS-17', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
-        { name: 'AMOS-18', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
-        { name: 'AMOS-19', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
-        { name: 'AMOS-20', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
-        { name: 'AMOS-21', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
-        { name: 'AMOS-22', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
-        { name: 'INTELSAT 1', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'KU' },
-        { name: 'INTELSAT 2', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'KA' },
-        { name: 'INMARSAT', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null },
-        { name: 'O3B', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'KA' },
-        { name: 'IRIDIUM', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null }
+        { name: 'AMOS-6', display_name: 'עמוס 6', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null, sky_point: '4.0° W', bandwidth: 500 },
+        { name: 'AMOS-17', display_name: 'עמוס 17', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null, sky_point: '17.0° E', bandwidth: 1200 },
+        { name: 'AMOS-18', display_name: 'עמוס 18', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null, sky_point: '65.0° E', bandwidth: 800 },
+        { name: 'AMOS-19', display_name: 'עמוס 19', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null, sky_point: '120.0° E', bandwidth: 600 },
+        { name: 'AMOS-20', display_name: 'עמוס 20', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null, sky_point: '180.0° W', bandwidth: 750 },
+        { name: 'AMOS-21', display_name: 'עמוס 21', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null, sky_point: '4.0° W', bandwidth: 900 },
+        { name: 'AMOS-22', display_name: 'עמוס 22', affiliation: 'israeli', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null, sky_point: '17.0° E', bandwidth: 1100 },
+        { name: 'INTELSAT 1', display_name: 'אינטלסאט 1', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'ku', sky_point: '34.5° W', bandwidth: 72 },
+        { name: 'INTELSAT 2', display_name: 'אינטלסאט 2', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'ka', sky_point: '66.0° E', bandwidth: 144 },
+        { name: 'INMARSAT', display_name: 'אינמרסאט', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null, sky_point: '25.0° W', bandwidth: 250 },
+        { name: 'O3B', display_name: 'O3B', affiliation: 'international', has_frequency_converter: false, readiness_status: 'ready', frequency_band: 'ka', sky_point: '0.0° E', bandwidth: 4320 },
+        { name: 'IRIDIUM', display_name: 'אירידיום', affiliation: 'international', has_frequency_converter: true, readiness_status: 'ready', frequency_band: null, sky_point: '86.4° N', bandwidth: 240 }
       ] as any)
       .returning(['id', 'name'])
       .execute();
@@ -80,13 +80,18 @@ async function seed() {
 
     // 6. Seed 10+ Terminals
     const terminals = await db.insertInto('terminals')
-      .values(stations.map((s, i) => ({
-        name: `טרמינל-${s.name.split(' ')[1] || i}`,
-        station_id: s.id,
-        terminal_type_id: fixedId,
-        frequency_band: i % 2 === 0 ? 'KA' : 'KU',
-        readiness_status: 'ready'
-      })) as any)
+      .values(stations.map((s, i) => {
+        const band = i % 3 === 0 ? 'ka' : i % 3 === 1 ? 'ku' : 'cb';
+        const secondStationId = band === 'cb' ? stations[(i + 1) % stations.length].id : null;
+        return {
+          name: `טרמינל-${s.name.split(' ')[1] || i}`,
+          station_id: s.id,
+          second_station_id: secondStationId,
+          terminal_type_id: fixedId,
+          frequency_band: band,
+          readiness_status: 'ready'
+        };
+      }) as any)
       .returning(['id', 'station_id', 'frequency_band'])
       .execute();
 

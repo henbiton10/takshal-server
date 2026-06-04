@@ -30,6 +30,7 @@ export class NetworksService {
   async findAll(): Promise<Network[]> {
     return await this.networksRepository.find({
       where: { isDeleted: false },
+      relations: ['terminalType'],
     });
   }
 
@@ -43,6 +44,7 @@ export class NetworksService {
   async findOne(id: number): Promise<Network | null> {
     return await this.networksRepository.findOne({
       where: { id, isDeleted: false },
+      relations: ['terminalType'],
     });
   }
 

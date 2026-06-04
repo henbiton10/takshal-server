@@ -34,6 +34,10 @@ export class TerminalsService {
     const terminalTypeId = await this.getOrCreateTerminalType(createTerminalDto.terminalType);
     
     const { terminalType, ...terminalData } = createTerminalDto;
+    if (terminalData.frequencyBand !== 'cb') {
+      terminalData.secondStationId = null;
+    }
+    
     const terminal = this.terminalsRepository.create({
       ...terminalData,
       terminalTypeId,
@@ -52,7 +56,7 @@ export class TerminalsService {
   async findAll(): Promise<Terminal[]> {
     return this.terminalsRepository.find({
       where: { isDeleted: false },
-      relations: ['station'],
+      relations: ['station', 'secondStation'],
     });
   }
 
@@ -66,7 +70,7 @@ export class TerminalsService {
   async findOne(id: number): Promise<Terminal | null> {
     return this.terminalsRepository.findOne({
       where: { id, isDeleted: false },
-      relations: ['station', 'terminalType'],
+      relations: ['station', 'secondStation', 'terminalType'],
     });
   }
 
@@ -82,6 +86,9 @@ export class TerminalsService {
     }
 
     const { terminalType, ...restDto } = updateTerminalDto;
+    if (restDto.frequencyBand !== 'cb') {
+      restDto.secondStationId = null;
+    }
     
     // Update the terminal using a clean merge of the DTO
     await this.terminalsRepository.update(id, {

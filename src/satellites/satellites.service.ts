@@ -33,7 +33,7 @@ export class SatellitesService {
     });
   }
 
-  async findAllSummary(): Promise<Array<{ id: number; name: string; isDeleted: boolean }>> {
+  async findAllSummary(): Promise<Array<{ id: number; name: string | null; isDeleted: boolean }>> {
     return this.satellitesRepository.find({
       select: ['id', 'name', 'isDeleted'],
     });

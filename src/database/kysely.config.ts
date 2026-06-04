@@ -5,14 +5,14 @@ import { DB_SCHEMA } from './schema.constants';
 
 dotenv.config();
 
-export const createKyselyInstance = () => {
-  const dialect = new PostgresDialect({
+const createDialect = (database: string | undefined) => {
+  return new PostgresDialect({
     pool: new Pool({
       host: process.env.POSTGRES_DB_HOST,
       port: parseInt(process.env.POSTGRES_DB_PORT || '5432'),
       user: process.env.POSTGRES_DB_USER,
       password: process.env.POSTGRES_DB_PASSWORD,
-      database: process.env.POSTGRES_DB_NAME,
+      database,
       options: `-c search_path="${DB_SCHEMA}",public`,
       ssl: (process.env.ENVIRONMENT === 'local' || process.env.ENVIRONMENT === 'np') ? false : {
         rejectUnauthorized: false,
@@ -21,6 +21,18 @@ export const createKyselyInstance = () => {
       },
     }),
   });
+};
+
+export const createKyselyInstance = () => {
+  const dialect = createDialect(process.env.POSTGRES_DB_NAME);
+
+  return new Kysely<any>({
+    dialect,
+  });
+};
+
+export const createMigrationsDevVerifyInstance = () => {
+  const dialect = createDialect(process.env.MIGRATIONS_DEV_VERIFY_DB_NAME);
 
   return new Kysely<any>({
     dialect,

@@ -8,7 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { OrganizationalAffiliation, ReadinessStatus, ConnectivityDto, AntennaDto } from './create-station.dto';
+import { OrganizationalAffiliation, ReadinessStatus, ConnectivityDto, AntennaDto, CratosDto } from './create-station.dto';
 
 export class UpdateStationDto {
   @IsString()
@@ -40,4 +40,10 @@ export class UpdateStationDto {
   @Type(() => AntennaDto)
   @IsOptional()
   antennas?: AntennaDto[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CratosDto)
+  @IsOptional()
+  cratoses?: CratosDto[];
 }

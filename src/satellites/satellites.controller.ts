@@ -14,7 +14,7 @@ export class SatellitesController {
   }
 
   @Get('summary')
-  findAllSummary(): Promise<Array<{ id: number; name: string }>> {
+  findAllSummary(): Promise<Array<{ id: number; name: string | null }>> {
     return this.satellitesService.findAllSummary();
   }
 

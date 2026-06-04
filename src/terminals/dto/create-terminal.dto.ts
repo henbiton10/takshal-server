@@ -3,6 +3,7 @@ import { IsString, IsNotEmpty, IsEnum, IsNumber, IsOptional } from 'class-valida
 export enum FrequencyBand {
   KA = 'ka',
   KU = 'ku',
+  CB = 'cb',
 }
 
 export enum ReadinessStatus {
@@ -19,6 +20,10 @@ export class CreateTerminalDto {
   @IsNumber()
   @IsNotEmpty()
   stationId: number;
+
+  @IsNumber()
+  @IsOptional()
+  secondStationId?: number | null;
 
   @IsEnum(FrequencyBand)
   @IsNotEmpty()

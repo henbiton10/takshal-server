@@ -7,7 +7,9 @@ import {
   IsArray,
   ValidateNested,
   IsNumber,
+  IsInt,
   Min,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -35,6 +37,30 @@ export class ConnectivityDto {
   @Min(1)
   @IsNotEmpty()
   channelCount: number;
+
+  @IsString()
+  @IsOptional()
+  crNumber?: string | null;
+
+  @IsString()
+  @IsOptional()
+  transitNetwork?: string | null;
+
+  @IsNumber()
+  @IsOptional()
+  linkStationId?: number | null;
+
+  @IsString()
+  @IsOptional()
+  linkCrNumber?: string | null;
+
+  @IsNumber()
+  @IsOptional()
+  linkAntennaSize?: number | null;
+
+  @IsString()
+  @IsOptional()
+  linkFrequencyBand?: string | null;
 }
 
 export class AntennaDto {
@@ -46,6 +72,14 @@ export class AntennaDto {
   @IsString()
   @IsNotEmpty()
   frequencyBand: string;
+}
+
+export class CratosDto {
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  @IsNotEmpty()
+  number: number;
 }
 
 export class CreateStationDto {
@@ -78,4 +112,10 @@ export class CreateStationDto {
   @Type(() => AntennaDto)
   @IsOptional()
   antennas?: AntennaDto[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CratosDto)
+  @IsOptional()
+  cratoses?: CratosDto[];
 }

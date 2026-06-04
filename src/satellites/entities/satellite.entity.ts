@@ -8,6 +8,18 @@ export class Satellite {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
+  @Column({ name: 'display_name', type: 'varchar', length: 255, nullable: true })
+  displayName: string | null;
+
+  @Column({ name: 'sky_point', type: 'varchar', length: 255, nullable: true })
+  skyPoint: string | null;
+
+  @Column({ type: 'integer', default: 0 })
+  bandwidth: number;
+
+  @Column({ type: 'jsonb', nullable: true })
+  screenshots: string[] | null;
+
   @Column({
     type: 'enum',
     enum: ['israeli', 'international'],

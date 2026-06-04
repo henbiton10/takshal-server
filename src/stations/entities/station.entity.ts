@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { StationConnectivity } from './station-connectivity.entity';
 import { StationAntenna } from './station-antenna.entity';
+import { StationCratos } from './station-cratos.entity';
 import { Terminal } from '../../terminals/entities/terminal.entity';
 
 @Entity('stations')
@@ -55,6 +56,9 @@ export class Station {
 
   @OneToMany(() => StationAntenna, (antenna) => antenna.station)
   antennas: StationAntenna[];
+
+  @OneToMany(() => StationCratos, (cratos) => cratos.station)
+  cratoses: StationCratos[];
 
   @OneToMany(() => Terminal, (terminal) => terminal.station)
   terminals: Terminal[];

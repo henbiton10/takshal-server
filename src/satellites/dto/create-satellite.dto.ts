@@ -5,6 +5,8 @@ import {
   IsBoolean,
   IsOptional,
   ValidateIf,
+  IsNumber,
+  IsArray,
 } from 'class-validator';
 
 export enum Affiliation {
@@ -27,6 +29,23 @@ export class CreateSatelliteDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @IsString()
+  @IsOptional()
+  displayName?: string | null;
+
+  @IsString()
+  @IsOptional()
+  skyPoint?: string | null;
+
+  @IsNumber()
+  @IsNotEmpty()
+  bandwidth: number;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  screenshots?: string[] | null;
 
   @IsEnum(Affiliation)
   @IsNotEmpty()

@@ -4,7 +4,7 @@ export class TerminalAllocationInfoDto {
   satellite: string;
   antenna: string;
   antennaSize: number;
-  frequencyBand: 'ka' | 'ku';
+  frequencyBand: 'ka' | 'ku' | 'cb';
   channel: string;
   connectivity?: string;
 }
@@ -14,7 +14,7 @@ export class DashboardTerminalDto {
   name: string;
   stationId: number;
   stationName: string;
-  frequencyBand: 'ka' | 'ku';
+  frequencyBand: 'ka' | 'ku' | 'cb';
   readinessStatus: 'ready' | 'partly_ready' | 'damaged';
   isAllocated: boolean;
   allocations: TerminalAllocationInfoDto[];
@@ -29,7 +29,7 @@ export class AntennaChannelStatusDto {
 export class DashboardAntennaDto {
   id: number;
   size: number;
-  frequencyBand: 'ka' | 'ku';
+  frequencyBand: 'ka' | 'ku' | 'cb';
   stationId: number;
   channels: AntennaChannelStatusDto[];
 }
@@ -49,14 +49,14 @@ export class SatelliteAllocationDto {
   stationName: string;
   terminalId: number;
   terminalName: string;
-  frequencyBand: 'ka' | 'ku';
+  frequencyBand: 'ka' | 'ku' | 'cb';
   antennaSize: number;
   direction: 'transmission' | 'reception';
 }
 
 export class DashboardSatelliteDto {
   id: number;
-  name: string;
+  name: string | null;
   affiliation: 'local' | 'global';
   hasFrequencyConverter: boolean;
   readinessStatus: 'ready' | 'partly_ready' | 'damaged';

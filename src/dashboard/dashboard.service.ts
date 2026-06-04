@@ -93,7 +93,7 @@ export class DashboardService {
 
     return stations.map((station) => {
       const stationTerminals = terminals.filter(
-        (terminal) => terminal.stationId === station.id,
+        (terminal) => terminal.stationId === station.id || terminal.secondStationId === station.id,
       );
 
       const dashboardTerminals: DashboardTerminalDto[] = stationTerminals.map(
@@ -109,14 +109,14 @@ export class DashboardService {
                 if (alloc.transmissionSatellite) {
                 const txAntennaName = alloc.transmissionAntenna?.station?.name || station.name;
                 const txAntennaSize = Number(alloc.transmissionAntenna?.size) || '';
-                const txFreqBand = ((alloc.transmissionAntenna?.frequencyBand as 'ka' | 'ku') || (terminal.frequencyBand as 'ka' | 'ku') || 'ku').toUpperCase();
+                const txFreqBand = ((alloc.transmissionAntenna?.frequencyBand as 'ka' | 'ku' | 'cb') || (terminal.frequencyBand as 'ka' | 'ku' | 'cb') || 'ku').toUpperCase();
                 results.push({
                   direction: 'transmission',
                   frequency: Number(alloc.transmissionFrequency),
                   satellite: alloc.transmissionSatellite?.name || '',
                   antenna: `${txAntennaName} ${txAntennaSize}מ' ${txFreqBand}`,
                   antennaSize: Number(alloc.transmissionAntenna?.size) || 0,
-                  frequencyBand: (terminal.frequencyBand as 'ka' | 'ku') || 'ku',
+                  frequencyBand: (terminal.frequencyBand as 'ka' | 'ku' | 'cb') || 'ku',
                   channel: alloc.transmissionChannelNumber?.toString() || '',
                   connectivity: alloc.transmissionConnectivity?.communicationType,
                 });
@@ -125,14 +125,14 @@ export class DashboardService {
               if (alloc.receptionSatellite) {
                 const rxAntennaName = alloc.receptionAntenna?.station?.name || station.name;
                 const rxAntennaSize = Number(alloc.receptionAntenna?.size) || '';
-                const rxFreqBand = ((alloc.receptionAntenna?.frequencyBand as 'ka' | 'ku') || (terminal.frequencyBand as 'ka' | 'ku') || 'ku').toUpperCase();
+                const rxFreqBand = ((alloc.receptionAntenna?.frequencyBand as 'ka' | 'ku' | 'cb') || (terminal.frequencyBand as 'ka' | 'ku' | 'cb') || 'ku').toUpperCase();
                 results.push({
                   direction: 'reception',
                   frequency: Number(alloc.receptionFrequency),
                   satellite: alloc.receptionSatellite?.name || '',
                   antenna: `${rxAntennaName} ${rxAntennaSize}מ' ${rxFreqBand}`,
                   antennaSize: Number(alloc.receptionAntenna?.size) || 0,
-                  frequencyBand: (terminal.frequencyBand as 'ka' | 'ku') || 'ku',
+                  frequencyBand: (terminal.frequencyBand as 'ka' | 'ku' | 'cb') || 'ku',
                   channel: alloc.receptionChannelNumber?.toString() || '',
                   connectivity: alloc.receptionConnectivity?.communicationType,
                 });
@@ -147,7 +147,7 @@ export class DashboardService {
             name: terminal.name,
             stationId: terminal.stationId,
             stationName: station.name,
-            frequencyBand: (terminal.frequencyBand as 'ka' | 'ku') || 'ku',
+            frequencyBand: (terminal.frequencyBand as 'ka' | 'ku' | 'cb') || 'ku',
             readinessStatus: terminal.readinessStatus as
               | 'ready'
               | 'partly_ready'
@@ -175,7 +175,7 @@ export class DashboardService {
           return {
             id: antenna.id,
             size: Number(antenna.size),
-            frequencyBand: (antenna.frequencyBand as 'ka' | 'ku') || 'ku',
+            frequencyBand: (antenna.frequencyBand as 'ka' | 'ku' | 'cb') || 'ku',
             stationId: station.id,
             channels,
           };
@@ -242,7 +242,7 @@ export class DashboardService {
             terminalId: alloc.terminalId,
             terminalName: alloc.terminal?.name || '',
             frequencyBand:
-              (alloc.terminal?.frequencyBand as 'ka' | 'ku') || 'ku',
+              (alloc.terminal?.frequencyBand as 'ka' | 'ku' | 'cb') || 'ku',
             antennaSize,
             direction,
           });

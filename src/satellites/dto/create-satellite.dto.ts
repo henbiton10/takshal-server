@@ -2,9 +2,7 @@ import {
   IsString,
   IsNotEmpty,
   IsEnum,
-  IsBoolean,
   IsOptional,
-  ValidateIf,
   IsNumber,
   IsArray,
 } from 'class-validator';
@@ -23,6 +21,7 @@ export enum ReadinessStatus {
 export enum FrequencyBand {
   KU = 'ku',
   KA = 'ka',
+  CB = 'cb',
 }
 
 export class CreateSatelliteDto {
@@ -51,14 +50,9 @@ export class CreateSatelliteDto {
   @IsNotEmpty()
   affiliation: Affiliation;
 
-  @IsBoolean()
-  @IsNotEmpty()
-  hasFrequencyConverter: boolean;
-
-  @ValidateIf((o) => o.frequencyBand !== null)
   @IsEnum(FrequencyBand)
-  @IsOptional()
-  frequencyBand?: FrequencyBand | null;
+  @IsNotEmpty()
+  frequencyBand: FrequencyBand;
 
   @IsEnum(ReadinessStatus)
   @IsNotEmpty()

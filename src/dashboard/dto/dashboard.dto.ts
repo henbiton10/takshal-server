@@ -58,7 +58,6 @@ export class DashboardSatelliteDto {
   id: number;
   name: string | null;
   affiliation: 'local' | 'global';
-  hasFrequencyConverter: boolean;
   readinessStatus: 'ready' | 'partly_ready' | 'damaged';
   allocations: SatelliteAllocationDto[];
 }

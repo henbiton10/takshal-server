@@ -26,9 +26,6 @@ export class Satellite {
   })
   affiliation: string;
 
-  @Column({ type: 'boolean', name: 'has_frequency_converter' })
-  hasFrequencyConverter: boolean;
-
   @Column({
     type: 'enum',
     enum: ['ready', 'partly_ready', 'damaged'],
@@ -38,7 +35,7 @@ export class Satellite {
 
   @Column({
     type: 'enum',
-    enum: ['ku', 'ka'],
+    enum: ['ku', 'ka', 'cb'],
     nullable: true,
     name: 'frequency_band',
   })

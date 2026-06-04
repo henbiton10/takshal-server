@@ -255,7 +255,6 @@ export class DashboardService {
         affiliation: (
           satellite.affiliation === 'israeli' ? 'local' : 'global'
         ) as 'local' | 'global',
-        hasFrequencyConverter: satellite.hasFrequencyConverter,
         readinessStatus: satellite.readinessStatus as
           | 'ready'
           | 'partly_ready'

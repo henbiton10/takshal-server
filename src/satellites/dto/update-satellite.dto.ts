@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum, IsBoolean, IsOptional, ValidateIf, IsNumber, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsOptional, IsNumber, IsArray } from 'class-validator';
 import { Affiliation, ReadinessStatus, FrequencyBand } from './create-satellite.dto';
 
 export class UpdateSatelliteDto {
@@ -27,14 +27,9 @@ export class UpdateSatelliteDto {
   @IsNotEmpty()
   affiliation: Affiliation;
 
-  @IsBoolean()
-  @IsNotEmpty()
-  hasFrequencyConverter: boolean;
-
-  @ValidateIf((o) => o.frequencyBand !== null)
   @IsEnum(FrequencyBand)
-  @IsOptional()
-  frequencyBand?: FrequencyBand | null;
+  @IsNotEmpty()
+  frequencyBand: FrequencyBand;
 
   @IsEnum(ReadinessStatus)
   @IsNotEmpty()

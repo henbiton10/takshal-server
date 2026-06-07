@@ -8,7 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { OrganizationalAffiliation, ReadinessStatus, ConnectivityDto, AntennaDto, CratosDto } from './create-station.dto';
+import { OrganizationalAffiliation, ReadinessStatus, AntennaDto, CratosDto } from './create-station.dto';
 
 export class UpdateStationDto {
   @IsString()
@@ -28,12 +28,6 @@ export class UpdateStationDto {
   @IsNotEmpty({ message: 'הערות הינן שדה חובה כאשר סטטוס הכשירות אינו "כשיר"' })
   @IsOptional()
   notes?: string;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ConnectivityDto)
-  @IsOptional()
-  connectivities?: ConnectivityDto[];
 
   @IsArray()
   @ValidateNested({ each: true })

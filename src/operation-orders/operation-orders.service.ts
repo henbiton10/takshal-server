@@ -8,7 +8,6 @@ import { CreateOperationOrderDto } from './dto/create-operation-order.dto';
 import { UpdateOperationOrderDto } from './dto/update-operation-order.dto';
 import { CreateAllocationDto } from './dto/create-allocation.dto';
 import { UpdateAllocationDto } from './dto/update-allocation.dto';
-import { StationConnectivity } from '../stations/entities/station-connectivity.entity';
 import { StationAntenna } from '../stations/entities/station-antenna.entity';
 import { Terminal } from '../terminals/entities/terminal.entity';
 
@@ -19,8 +18,6 @@ export class OperationOrdersService {
     private operationOrdersRepository: Repository<OperationOrder>,
     @InjectRepository(Allocation)
     private allocationsRepository: Repository<Allocation>,
-    @InjectRepository(StationConnectivity)
-    private connectivityRepository: Repository<StationConnectivity>,
     @InjectRepository(StationAntenna)
     private antennaRepository: Repository<StationAntenna>,
     @InjectRepository(Terminal)
@@ -70,8 +67,6 @@ export class OperationOrdersService {
         'allocations.transmissionAntenna.station',
         'allocations.receptionAntenna',
         'allocations.receptionAntenna.station',
-        'allocations.transmissionConnectivity',
-        'allocations.receptionConnectivity',
         'allocations.subAllocations',
         'allocations.subAllocations.terminal',
         'allocations.subAllocations.terminal.station',
@@ -81,8 +76,6 @@ export class OperationOrdersService {
         'allocations.subAllocations.transmissionAntenna.station',
         'allocations.subAllocations.receptionAntenna',
         'allocations.subAllocations.receptionAntenna.station',
-        'allocations.subAllocations.transmissionConnectivity',
-        'allocations.subAllocations.receptionConnectivity',
       ],
     });
   }
@@ -315,8 +308,6 @@ export class OperationOrdersService {
         'transmissionAntenna.station',
         'receptionAntenna',
         'receptionAntenna.station',
-        'transmissionConnectivity',
-        'receptionConnectivity',
         'subAllocations',
       ],
     });
@@ -328,128 +319,24 @@ export class OperationOrdersService {
     return allocation;
   }
 
+  // Station-to-station connectivity was removed; connectivity now lives on the terminal.
+  // Retained as a no-op so existing allocation flows keep working.
   async validateConnectivity(
-    terminalId: number,
-    antennaId: number,
-    operationOrderId: number,
-    excludeAllocationId?: number,
+    _terminalId: number,
+    _antennaId: number,
+    _operationOrderId: number,
+    _excludeAllocationId?: number,
   ): Promise<{
     connectivityRequired: boolean;
-    availableConnectivities: StationConnectivity[];
+    availableConnectivities: unknown[];
     availableChannels: Record<number, number[]>;
     error?: string;
     message?: string;
   }> {
-    const terminal = await this.terminalRepository.findOne({
-      where: { id: terminalId },
-      relations: ['station'],
-    });
-
-    const antenna = await this.antennaRepository.findOne({
-      where: { id: antennaId },
-      relations: ['station'],
-    });
-
-    if (!terminal || !antenna) {
-      return {
-        connectivityRequired: false,
-        availableConnectivities: [],
-        availableChannels: {},
-        error: 'not_found',
-        message: 'Terminal or antenna not found',
-      };
-    }
-
-    if (terminal.stationId === antenna.stationId) {
-      return {
-        connectivityRequired: false,
-        availableConnectivities: [],
-        availableChannels: {},
-      };
-    }
-
-    const connectivities = await this.connectivityRepository.find({
-      where: [
-        { stationId: terminal.stationId, connectedStationId: antenna.stationId },
-        { stationId: antenna.stationId, connectedStationId: terminal.stationId },
-      ],
-      relations: ['station', 'connectedStation'],
-    });
-
-    if (connectivities.length === 0) {
-      return {
-        connectivityRequired: true,
-        availableConnectivities: [],
-        availableChannels: {},
-        error: 'no_connectivity',
-        message: 'לא נמצאה קישוריות בין התחנות',
-      };
-    }
-
-    const overlappingOrderIds = await this.getOverlappingOperationOrderIds(operationOrderId);
-
-    const availableChannels = new Map<number, number[]>();
-
-    for (const connectivity of connectivities) {
-      const usedChannelsQuery = this.allocationsRepository
-        .createQueryBuilder('allocation')
-        .where('allocation.operation_order_id IN (:...orderIds)', { orderIds: overlappingOrderIds })
-        .andWhere('allocation.is_deleted = false')
-        .andWhere(
-          '(allocation.transmission_connectivity_id = :connId OR allocation.reception_connectivity_id = :connId)',
-          { connId: connectivity.id },
-        );
-
-      if (excludeAllocationId) {
-        usedChannelsQuery.andWhere('allocation.id != :excludeId', { excludeId: excludeAllocationId });
-      }
-
-      const usedAllocations = await usedChannelsQuery.getMany();
-
-      const usedChannelNumbers = new Set<number>();
-      usedAllocations.forEach((alloc) => {
-        if (alloc.transmissionConnectivityId === connectivity.id && alloc.transmissionChannelNumber) {
-          usedChannelNumbers.add(alloc.transmissionChannelNumber);
-        }
-        if (alloc.receptionConnectivityId === connectivity.id && alloc.receptionChannelNumber) {
-          usedChannelNumbers.add(alloc.receptionChannelNumber);
-        }
-      });
-
-      const totalChannels = connectivity.channelCount;
-      const available: number[] = [];
-      for (let i = 1; i <= totalChannels; i++) {
-        if (!usedChannelNumbers.has(i)) {
-          available.push(i);
-        }
-      }
-
-      availableChannels.set(connectivity.id, available);
-    }
-
-    const hasAvailableChannels = Array.from(availableChannels.values()).some(
-      (channels) => channels.length > 0,
-    );
-
-    const availableChannelsObj: Record<number, number[]> = {};
-    availableChannels.forEach((channels, connId) => {
-      availableChannelsObj[connId] = channels;
-    });
-
-    if (!hasAvailableChannels) {
-      return {
-        connectivityRequired: true,
-        availableConnectivities: connectivities,
-        availableChannels: availableChannelsObj,
-        error: 'channels_full',
-        message: 'אין ערוצים פנויים בין התחנות הקרקעיות',
-      };
-    }
-
     return {
-      connectivityRequired: true,
-      availableConnectivities: connectivities,
-      availableChannels: availableChannelsObj,
+      connectivityRequired: false,
+      availableConnectivities: [],
+      availableChannels: {},
     };
   }
 
@@ -712,13 +599,14 @@ export class OperationOrdersService {
     return { hasConflicts: conflicts.length > 0, conflicts };
   }
 
+  // Connectivity channels were removed along with station-to-station connectivity.
   async validateChannelConflicts(
-    operationOrderId: number,
-    transmissionConnectivityId: number | null,
-    transmissionChannelNumber: number | null,
-    receptionConnectivityId: number | null,
-    receptionChannelNumber: number | null,
-    excludeAllocationId?: number,
+    _operationOrderId: number,
+    _transmissionConnectivityId: number | null,
+    _transmissionChannelNumber: number | null,
+    _receptionConnectivityId: number | null,
+    _receptionChannelNumber: number | null,
+    _excludeAllocationId?: number,
   ): Promise<{
     hasConflicts: boolean;
     conflicts: Array<{
@@ -729,72 +617,6 @@ export class OperationOrdersService {
       operationOrderName: string;
     }>;
   }> {
-    const conflicts: Array<{
-      direction: 'transmission' | 'reception';
-      connectivityId: number;
-      channelNumber: number;
-      operationOrderId: number;
-      operationOrderName: string;
-    }> = [];
-
-    const overlappingOrderIds = await this.getOverlappingOperationOrderIds(operationOrderId);
-
-    if (overlappingOrderIds.length === 0) {
-      return { hasConflicts: false, conflicts: [] };
-    }
-
-    const allocationsInOverlappingOrders = await this.allocationsRepository.find({
-      where: {
-        operationOrderId: In(overlappingOrderIds),
-        isDeleted: false,
-      },
-      relations: ['operationOrder'],
-    });
-
-    const filteredAllocations = allocationsInOverlappingOrders.filter(
-      (alloc) => !excludeAllocationId || alloc.id !== excludeAllocationId,
-    );
-
-    if (transmissionConnectivityId && transmissionChannelNumber) {
-      for (const alloc of filteredAllocations) {
-        if (
-          (alloc.transmissionConnectivityId === transmissionConnectivityId &&
-            alloc.transmissionChannelNumber === transmissionChannelNumber) ||
-          (alloc.receptionConnectivityId === transmissionConnectivityId &&
-            alloc.receptionChannelNumber === transmissionChannelNumber)
-        ) {
-          conflicts.push({
-            direction: 'transmission',
-            connectivityId: transmissionConnectivityId,
-            channelNumber: transmissionChannelNumber,
-            operationOrderId: alloc.operationOrderId,
-            operationOrderName: alloc.operationOrder?.name || `פקודה ${alloc.operationOrderId}`,
-          });
-          break;
-        }
-      }
-    }
-
-    if (receptionConnectivityId && receptionChannelNumber) {
-      for (const alloc of filteredAllocations) {
-        if (
-          (alloc.receptionConnectivityId === receptionConnectivityId &&
-            alloc.receptionChannelNumber === receptionChannelNumber) ||
-          (alloc.transmissionConnectivityId === receptionConnectivityId &&
-            alloc.transmissionChannelNumber === receptionChannelNumber)
-        ) {
-          conflicts.push({
-            direction: 'reception',
-            connectivityId: receptionConnectivityId,
-            channelNumber: receptionChannelNumber,
-            operationOrderId: alloc.operationOrderId,
-            operationOrderName: alloc.operationOrder?.name || `פקודה ${alloc.operationOrderId}`,
-          });
-          break;
-        }
-      }
-    }
-
-    return { hasConflicts: conflicts.length > 0, conflicts };
+    return { hasConflicts: false, conflicts: [] };
   }
 }

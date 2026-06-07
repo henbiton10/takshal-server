@@ -4,7 +4,6 @@ import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
 import { Station } from '../stations/entities/station.entity';
 import { StationAntenna } from '../stations/entities/station-antenna.entity';
-import { StationConnectivity } from '../stations/entities/station-connectivity.entity';
 import { Terminal } from '../terminals/entities/terminal.entity';
 import { Satellite } from '../satellites/entities/satellite.entity';
 import { Network } from '../networks/entities/network.entity';
@@ -16,7 +15,6 @@ import { OperationOrder } from '../operation-orders/entities/operation-order.ent
     TypeOrmModule.forFeature([
       Station,
       StationAntenna,
-      StationConnectivity,
       Terminal,
       Satellite,
       Network,

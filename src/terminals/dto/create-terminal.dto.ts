@@ -1,4 +1,16 @@
-import { IsString, IsNotEmpty, IsEnum, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  IsNumber,
+  IsInt,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  Min,
+  Max,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum FrequencyBand {
   KA = 'ka',
@@ -12,18 +24,66 @@ export enum ReadinessStatus {
   DAMAGED = 'damaged',
 }
 
+export class TerminalConnectivityDto {
+  // --- Terminal side ---
+  @IsNumber()
+  @IsOptional()
+  stationId?: number | null;
+
+  @IsNumber()
+  @IsOptional()
+  antennaId?: number | null;
+
+  @IsString()
+  @IsOptional()
+  connectionType?: string | null;
+
+  @IsString()
+  @IsOptional()
+  transitNetwork?: string | null;
+
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  @IsOptional()
+  cratosNumber?: number | null;
+
+  // --- Antenna side (optional) ---
+  @IsNumber()
+  @IsOptional()
+  antennaSideStationId?: number | null;
+
+  @IsNumber()
+  @IsOptional()
+  antennaSideAntennaId?: number | null;
+
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  @IsOptional()
+  antennaSideCratosNumber?: number | null;
+}
+
 export class CreateTerminalDto {
   @IsString()
   @IsNotEmpty()
   name: string;
 
   @IsNumber()
-  @IsNotEmpty()
-  stationId: number;
+  @IsOptional()
+  stationId?: number | null;
 
   @IsNumber()
   @IsOptional()
   secondStationId?: number | null;
+
+  @IsNumber()
+  @IsNotEmpty()
+  bandwidth: number;
+
+  @IsNumber()
+  @IsOptional()
+  satelliteId?: number | null;
 
   @IsEnum(FrequencyBand)
   @IsNotEmpty()
@@ -40,4 +100,10 @@ export class CreateTerminalDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TerminalConnectivityDto)
+  @IsOptional()
+  connectivities?: TerminalConnectivityDto[];
 }

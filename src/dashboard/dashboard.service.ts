@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, In } from 'typeorm';
 import { Station } from '../stations/entities/station.entity';
 import { StationAntenna } from '../stations/entities/station-antenna.entity';
-import { StationConnectivity } from '../stations/entities/station-connectivity.entity';
 import { Terminal } from '../terminals/entities/terminal.entity';
 import { Satellite } from '../satellites/entities/satellite.entity';
 import { Network } from '../networks/entities/network.entity';
@@ -38,8 +37,6 @@ export class DashboardService {
     private networksRepository: Repository<Network>,
     @InjectRepository(StationAntenna)
     private antennasRepository: Repository<StationAntenna>,
-    @InjectRepository(StationConnectivity)
-    private connectivityRepository: Repository<StationConnectivity>,
     @InjectRepository(Allocation)
     private allocationsRepository: Repository<Allocation>,
     @InjectRepository(OperationOrder)
@@ -117,8 +114,8 @@ export class DashboardService {
                   antenna: `${txAntennaName} ${txAntennaSize}מ' ${txFreqBand}`,
                   antennaSize: Number(alloc.transmissionAntenna?.size) || 0,
                   frequencyBand: (terminal.frequencyBand as 'ka' | 'ku' | 'cb') || 'ku',
-                  channel: alloc.transmissionChannelNumber?.toString() || '',
-                  connectivity: alloc.transmissionConnectivity?.communicationType,
+                  channel: '',
+                  connectivity: undefined,
                 });
               }
 
@@ -133,8 +130,8 @@ export class DashboardService {
                   antenna: `${rxAntennaName} ${rxAntennaSize}מ' ${rxFreqBand}`,
                   antennaSize: Number(alloc.receptionAntenna?.size) || 0,
                   frequencyBand: (terminal.frequencyBand as 'ka' | 'ku' | 'cb') || 'ku',
-                  channel: alloc.receptionChannelNumber?.toString() || '',
-                  connectivity: alloc.receptionConnectivity?.communicationType,
+                  channel: '',
+                  connectivity: undefined,
                 });
               }
 
@@ -386,8 +383,6 @@ export class DashboardService {
         'transmissionAntenna.station',
         'receptionAntenna',
         'receptionAntenna.station',
-        'transmissionConnectivity',
-        'receptionConnectivity',
       ],
     });
 
@@ -408,13 +403,7 @@ export class DashboardService {
 
     return channelTypes.map((channelType) => {
       const usedCount = allocations.filter((alloc) => {
-        const isTransmissionMatch =
-          alloc.transmissionAntennaId === antennaId &&
-          alloc.transmissionChannelNumber !== null;
-        const isReceptionMatch =
-          alloc.receptionAntennaId === antennaId &&
-          alloc.receptionChannelNumber !== null;
-        return isTransmissionMatch || isReceptionMatch;
+        return alloc.transmissionAntennaId === antennaId || alloc.receptionAntennaId === antennaId;
       }).length;
 
       return {

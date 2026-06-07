@@ -12,7 +12,7 @@ export class TerminalAllocationInfoDto {
 export class DashboardTerminalDto {
   id: number;
   name: string;
-  stationId: number;
+  stationId: number | null;
   stationName: string;
   frequencyBand: 'ka' | 'ku' | 'cb';
   readinessStatus: 'ready' | 'partly_ready' | 'damaged';

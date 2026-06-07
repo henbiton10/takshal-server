@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DB_SCHEMA } from '../database/schema.constants';
 import { Station } from './entities/station.entity';
-import { StationConnectivity } from './entities/station-connectivity.entity';
 import { StationAntenna } from './entities/station-antenna.entity';
 import { StationCratos } from './entities/station-cratos.entity';
 import { CreateStationDto } from './dto/create-station.dto';
@@ -15,8 +14,6 @@ export class StationsService {
   constructor(
     @InjectRepository(Station)
     private stationsRepository: Repository<Station>,
-    @InjectRepository(StationConnectivity)
-    private connectivityRepository: Repository<StationConnectivity>,
     @InjectRepository(StationAntenna)
     private antennaRepository: Repository<StationAntenna>,
     @InjectRepository(StationCratos)
@@ -31,26 +28,8 @@ export class StationsService {
       readinessStatus: createStationDto.readinessStatus,
       notes: createStationDto.notes,
     });
-    
-    const savedStation = await this.stationsRepository.save(station);
 
-    if (createStationDto.connectivities && createStationDto.connectivities.length > 0) {
-      const connectivities = createStationDto.connectivities.map((conn) =>
-        this.connectivityRepository.create({
-          stationId: savedStation.id,
-          connectedStationId: conn.connectedStationId,
-          communicationType: conn.communicationType,
-          channelCount: conn.channelCount,
-          crNumber: conn.crNumber || null,
-          transitNetwork: conn.transitNetwork || null,
-          linkStationId: conn.linkStationId || null,
-          linkCrNumber: conn.linkCrNumber || null,
-          linkAntennaSize: conn.linkAntennaSize || null,
-          linkFrequencyBand: conn.linkFrequencyBand || null,
-        }),
-      );
-      await this.connectivityRepository.save(connectivities);
-    }
+    const savedStation = await this.stationsRepository.save(station);
 
     if (createStationDto.antennas && createStationDto.antennas.length > 0) {
       const antennas = createStationDto.antennas.map((ant) =>
@@ -88,22 +67,10 @@ export class StationsService {
   }
 
   async findAll(): Promise<Station[]> {
-    const stations = await this.stationsRepository.find({
+    return this.stationsRepository.find({
       where: { isDeleted: false },
-      relations: [
-        'connectivities', 'connectivities.connectedStation',
-        'reverseConnectivities', 'reverseConnectivities.station',
-        'antennas',
-        'cratoses',
-        'terminals',
-      ],
+      relations: ['antennas', 'cratoses', 'terminals'],
     });
-
-    for (const station of stations) {
-      this.mergeReverseConnectivities(station);
-    }
-
-    return stations;
   }
 
   async findAllSummary(): Promise<Array<{ id: number; name: string }>> {
@@ -114,57 +81,17 @@ export class StationsService {
   }
 
   async findOne(id: number): Promise<Station | null> {
-    const station = await this.stationsRepository.findOne({
+    return this.stationsRepository.findOne({
       where: { id, isDeleted: false },
-      relations: [
-        'connectivities', 'connectivities.connectedStation', 'connectivities.linkStation',
-        'reverseConnectivities', 'reverseConnectivities.station', 'reverseConnectivities.linkStation',
-        'antennas',
-        'cratoses',
-        'terminals',
-      ],
+      relations: ['antennas', 'cratoses', 'terminals'],
     });
-
-    if (station) {
-      this.mergeReverseConnectivities(station);
-    }
-
-    return station;
-  }
-
-  private mergeReverseConnectivities(station: Station): void {
-    const reverseAsForward = (station.reverseConnectivities || []).map((rc) => {
-      const flipped = new StationConnectivity();
-      flipped.id = rc.id;
-      flipped.stationId = rc.connectedStationId;
-      flipped.connectedStationId = rc.stationId;
-      flipped.communicationType = rc.communicationType;
-      flipped.channelCount = rc.channelCount;
-      flipped.crNumber = rc.crNumber;
-      flipped.transitNetwork = rc.transitNetwork;
-      flipped.linkStationId = rc.linkStationId;
-      flipped.linkCrNumber = rc.linkCrNumber;
-      flipped.linkAntennaSize = rc.linkAntennaSize;
-      flipped.linkFrequencyBand = rc.linkFrequencyBand;
-      flipped.createdAt = rc.createdAt;
-      flipped.connectedStation = rc.station;
-      flipped.linkStation = rc.linkStation;
-      return flipped;
-    });
-
-    station.connectivities = [
-      ...(station.connectivities || []),
-      ...reverseAsForward,
-    ];
-
-    delete (station as any).reverseConnectivities;
   }
 
   async update(id: number, updateStationDto: UpdateStationDto): Promise<Station> {
     const station = await this.stationsRepository.findOne({
       where: { id, isDeleted: false },
     });
-    
+
     if (!station) {
       throw new NotFoundException(`Station with ID ${id} not found`);
     }
@@ -173,69 +100,15 @@ export class StationsService {
     station.organizationalAffiliation = updateStationDto.organizationalAffiliation;
     station.readinessStatus = updateStationDto.readinessStatus;
     station.notes = updateStationDto.notes || '';
-    
+
     await this.stationsRepository.save(station);
 
-    // 1. Update Connectivities
-    if (updateStationDto.connectivities) {
-      const existingConnectivities = await this.connectivityRepository.find({
-        where: [{ stationId: id }, { connectedStationId: id }],
-      });
-
-      // Simple comparison: check if the new list matches the old list by properties
-      const isConnectivityChanged = updateStationDto.connectivities.length !== existingConnectivities.length ||
-        updateStationDto.connectivities.some(nc => !existingConnectivities.some(ec => 
-          ec.connectedStationId === nc.connectedStationId && 
-          ec.communicationType === nc.communicationType && 
-          ec.channelCount === nc.channelCount &&
-          ec.crNumber === nc.crNumber &&
-          ec.transitNetwork === nc.transitNetwork &&
-          ec.linkStationId === nc.linkStationId &&
-          ec.linkCrNumber === nc.linkCrNumber &&
-          ec.linkAntennaSize === nc.linkAntennaSize &&
-          ec.linkFrequencyBand === nc.linkFrequencyBand
-        ));
-
-      if (isConnectivityChanged) {
-        const connectivityIdsToDelete = existingConnectivities.map((c) => c.id);
-        if (connectivityIdsToDelete.length > 0) {
-          await this.connectivityRepository.manager.query(
-            `UPDATE "${DB_SCHEMA}".allocations SET transmission_connectivity_id = NULL WHERE transmission_connectivity_id = ANY($1)`,
-            [connectivityIdsToDelete],
-          );
-          await this.connectivityRepository.manager.query(
-            `UPDATE "${DB_SCHEMA}".allocations SET reception_connectivity_id = NULL WHERE reception_connectivity_id = ANY($1)`,
-            [connectivityIdsToDelete],
-          );
-        }
-        await this.connectivityRepository.delete({ stationId: id });
-        await this.connectivityRepository.delete({ connectedStationId: id });
-
-        const connectivities = updateStationDto.connectivities.map((conn) =>
-          this.connectivityRepository.create({
-            stationId: id,
-            connectedStationId: conn.connectedStationId,
-            communicationType: conn.communicationType,
-            channelCount: conn.channelCount,
-            crNumber: conn.crNumber || null,
-            transitNetwork: conn.transitNetwork || null,
-            linkStationId: conn.linkStationId || null,
-            linkCrNumber: conn.linkCrNumber || null,
-            linkAntennaSize: conn.linkAntennaSize || null,
-            linkFrequencyBand: conn.linkFrequencyBand || null,
-          }),
-        );
-        await this.connectivityRepository.save(connectivities);
-      }
-    }
-
-    // 2. Update Antennas
+    // Update Antennas
     if (updateStationDto.antennas) {
       const existingAntennas = await this.antennaRepository.find({
         where: { stationId: id },
       });
 
-      // Check if antennas actually changed (size and band)
       const isAntennasChanged = updateStationDto.antennas.length !== existingAntennas.length ||
         updateStationDto.antennas.some(na => !existingAntennas.some(ea =>
           Number(ea.size) === Number(na.size) &&
@@ -263,7 +136,7 @@ export class StationsService {
       }
     }
 
-    // 3. Update Cratoses
+    // Update Cratoses
     if (updateStationDto.cratoses) {
       const existingCratoses = await this.cratosRepository.find({
         where: { stationId: id },
@@ -287,7 +160,6 @@ export class StationsService {
       }
     }
 
-
     const result = await this.findOne(id);
     if (!result) {
       throw new NotFoundException(`Failed to retrieve updated station`);
@@ -306,7 +178,7 @@ export class StationsService {
     const station = await this.stationsRepository.findOne({
       where: { id, isDeleted: false },
     });
-    
+
     if (!station) {
       throw new NotFoundException(`Station with ID ${id} not found`);
     }

@@ -24,45 +24,6 @@ export enum ReadinessStatus {
   DAMAGED = 'damaged',
 }
 
-export class ConnectivityDto {
-  @IsNumber()
-  @IsNotEmpty()
-  connectedStationId: number;
-
-  @IsString()
-  @IsNotEmpty()
-  communicationType: string;
-
-  @IsNumber()
-  @Min(1)
-  @IsNotEmpty()
-  channelCount: number;
-
-  @IsString()
-  @IsOptional()
-  crNumber?: string | null;
-
-  @IsString()
-  @IsOptional()
-  transitNetwork?: string | null;
-
-  @IsNumber()
-  @IsOptional()
-  linkStationId?: number | null;
-
-  @IsString()
-  @IsOptional()
-  linkCrNumber?: string | null;
-
-  @IsNumber()
-  @IsOptional()
-  linkAntennaSize?: number | null;
-
-  @IsString()
-  @IsOptional()
-  linkFrequencyBand?: string | null;
-}
-
 export class AntennaDto {
   @IsNumber()
   @Min(0.1)
@@ -100,12 +61,6 @@ export class CreateStationDto {
   @IsNotEmpty({ message: 'הערות הינן שדה חובה כאשר סטטוס הכשירות אינו "כשיר"' })
   @IsOptional()
   notes?: string;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ConnectivityDto)
-  @IsOptional()
-  connectivities?: ConnectivityDto[];
 
   @IsArray()
   @ValidateNested({ each: true })

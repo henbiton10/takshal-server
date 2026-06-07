@@ -18,6 +18,11 @@ export class TerminalsController {
     return this.terminalsService.findAllSummary();
   }
 
+  @Get('cratos-usage')
+  getCratosUsage() {
+    return this.terminalsService.getCratosUsage();
+  }
+
   @Get()
   findAll(): Promise<Terminal[]> {
     return this.terminalsService.findAll();

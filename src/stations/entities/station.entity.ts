@@ -6,7 +6,6 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { StationConnectivity } from './station-connectivity.entity';
 import { StationAntenna } from './station-antenna.entity';
 import { StationCratos } from './station-cratos.entity';
 import { Terminal } from '../../terminals/entities/terminal.entity';
@@ -47,12 +46,6 @@ export class Station {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
-
-  @OneToMany(() => StationConnectivity, (connectivity) => connectivity.station)
-  connectivities: StationConnectivity[];
-
-  @OneToMany(() => StationConnectivity, (connectivity) => connectivity.connectedStation)
-  reverseConnectivities: StationConnectivity[];
 
   @OneToMany(() => StationAntenna, (antenna) => antenna.station)
   antennas: StationAntenna[];

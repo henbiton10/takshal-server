@@ -12,7 +12,6 @@ import { OperationOrder } from './operation-order.entity';
 import { Terminal } from '../../terminals/entities/terminal.entity';
 import { Satellite } from '../../satellites/entities/satellite.entity';
 import { StationAntenna } from '../../stations/entities/station-antenna.entity';
-import { StationConnectivity } from '../../stations/entities/station-connectivity.entity';
 
 @Entity('allocations')
 export class Allocation {
@@ -82,26 +81,6 @@ export class Allocation {
 
   @Column({ name: 'reception_frequency', type: 'decimal', precision: 10, scale: 2 })
   receptionFrequency: number;
-
-  @Column({ name: 'transmission_connectivity_id', type: 'int', nullable: true })
-  transmissionConnectivityId: number | null;
-
-  @ManyToOne(() => StationConnectivity, { nullable: true })
-  @JoinColumn({ name: 'transmission_connectivity_id' })
-  transmissionConnectivity: StationConnectivity | null;
-
-  @Column({ name: 'reception_connectivity_id', type: 'int', nullable: true })
-  receptionConnectivityId: number | null;
-
-  @ManyToOne(() => StationConnectivity, { nullable: true })
-  @JoinColumn({ name: 'reception_connectivity_id' })
-  receptionConnectivity: StationConnectivity | null;
-
-  @Column({ name: 'transmission_channel_number', type: 'int', nullable: true })
-  transmissionChannelNumber: number | null;
-
-  @Column({ name: 'reception_channel_number', type: 'int', nullable: true })
-  receptionChannelNumber: number | null;
 
   @Column({ name: 'tail_numbers', type: 'int', array: true, nullable: true })
   tailNumbers: number[] | null;

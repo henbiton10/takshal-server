@@ -35,22 +35,6 @@ export class CreateAllocationDto {
   @Min(0.01)
   receptionFrequency: number;
 
-  @IsNumber()
-  @IsOptional()
-  transmissionConnectivityId?: number | null;
-
-  @IsNumber()
-  @IsOptional()
-  receptionConnectivityId?: number | null;
-
-  @IsNumber()
-  @IsOptional()
-  transmissionChannelNumber?: number | null;
-
-  @IsNumber()
-  @IsOptional()
-  receptionChannelNumber?: number | null;
-
   @IsArray()
   @IsNumber({}, { each: true })
   @IsOptional()

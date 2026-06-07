@@ -1,6 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Station } from '../../stations/entities/station.entity';
 import { TerminalType } from '../../terminal-types/entities/terminal-type.entity';
+import { Satellite } from '../../satellites/entities/satellite.entity';
+import { TerminalConnectivity } from './terminal-connectivity.entity';
 
 @Entity('terminals')
 export class Terminal {
@@ -10,12 +12,25 @@ export class Terminal {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'integer', name: 'station_id' })
-  stationId: number;
+  @Column({ type: 'integer', name: 'station_id', nullable: true })
+  stationId: number | null;
 
   @ManyToOne(() => Station, station => station.terminals)
   @JoinColumn({ name: 'station_id' })
   station: Station;
+
+  @Column({ type: 'integer', default: 0 })
+  bandwidth: number;
+
+  @Column({ type: 'integer', name: 'satellite_id', nullable: true })
+  satelliteId: number | null;
+
+  @ManyToOne(() => Satellite)
+  @JoinColumn({ name: 'satellite_id' })
+  satellite: Satellite | null;
+
+  @OneToMany(() => TerminalConnectivity, (connectivity) => connectivity.terminal)
+  connectivities: TerminalConnectivity[];
 
   @Column({
     type: 'enum',

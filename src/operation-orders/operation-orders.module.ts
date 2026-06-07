@@ -4,7 +4,6 @@ import { OperationOrder } from './entities/operation-order.entity';
 import { Allocation } from './entities/allocation.entity';
 import { OperationOrdersService } from './operation-orders.service';
 import { OperationOrdersController, AllocationsController } from './operation-orders.controller';
-import { StationConnectivity } from '../stations/entities/station-connectivity.entity';
 import { StationAntenna } from '../stations/entities/station-antenna.entity';
 import { Terminal } from '../terminals/entities/terminal.entity';
 
@@ -13,7 +12,6 @@ import { Terminal } from '../terminals/entities/terminal.entity';
     TypeOrmModule.forFeature([
       OperationOrder,
       Allocation,
-      StationConnectivity,
       StationAntenna,
       Terminal,
     ]),
